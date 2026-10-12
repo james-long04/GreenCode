@@ -1,0 +1,28 @@
+{
+  "id": "py_012_regex_compile_in_loop",
+  "title": "Regular expression compiled inside a loop",
+  "language": "python",
+  "category": "repeated_computation",
+  "description": "",
+  "expected_rules": [
+    "PY005"
+  ],
+  "source": "import re\n\ndef solve(lines):\n    count = 0\n    for line in lines:\n        pattern = re.compile(r\"^ERROR\\s+\\[(\\w+)\\]\")\n        if pattern.match(line):\n            count += 1\n    return count\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "(['ERROR [db] x', 'INFO ok', 'ERROR [api] y'],)",
+      "expected": 2
+    },
+    {
+      "name": "empty",
+      "args": "([],)",
+      "expected": 0
+    }
+  ],
+  "benchmark": {
+    "setup": "lines = ['ERROR [svc%d] failed' % i if i % 3 else 'INFO fine' for i in range(300000)]",
+    "call": "solve(lines)"
+  }
+}

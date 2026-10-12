@@ -1,0 +1,28 @@
+{
+  "id": "py_016_count_matching_loop",
+  "title": "Counting loop with a condition",
+  "language": "python",
+  "category": "redundant_operations",
+  "description": "",
+  "expected_rules": [
+    "PY010"
+  ],
+  "source": "def solve(words, prefix):\n    count = 0\n    for w in words:\n        if w.startswith(prefix):\n            count += 1\n    return count\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "(['apple', 'apricot', 'banana'], 'ap')",
+      "expected": 2
+    },
+    {
+      "name": "empty",
+      "args": "([], 'a')",
+      "expected": 0
+    }
+  ],
+  "benchmark": {
+    "setup": "words = ['item%d' % i if i % 2 else 'other%d' % i for i in range(1500000)]",
+    "call": "solve(words, 'item')"
+  }
+}

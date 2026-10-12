@@ -1,0 +1,29 @@
+{
+  "id": "py_011_keys_membership",
+  "title": "Membership test on list(dict.keys()) inside a loop",
+  "language": "python",
+  "category": "allocations",
+  "description": "",
+  "expected_rules": [
+    "PY008",
+    "PY005"
+  ],
+  "source": "def solve(index, lookups):\n    hits = 0\n    for k in lookups:\n        if k in list(index.keys()):\n            hits += 1\n    return hits\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "({'a': 1, 'b': 2}, ['a', 'c', 'b'])",
+      "expected": 2
+    },
+    {
+      "name": "empty",
+      "args": "({}, ['a'])",
+      "expected": 0
+    }
+  ],
+  "benchmark": {
+    "setup": "index = {i: i for i in range(20000)}\nlookups = list(range(0, 4000))",
+    "call": "solve(index, lookups)"
+  }
+}

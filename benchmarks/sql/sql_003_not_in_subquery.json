@@ -1,0 +1,11 @@
+{
+  "id": "sql_003_not_in_subquery",
+  "title": "Customers without orders via NOT IN",
+  "language": "sql",
+  "category": "joins",
+  "description": "",
+  "expected_rules": [
+    "SQL005"
+  ],
+  "source": "SELECT c.id, c.email FROM customers c WHERE c.id NOT IN (SELECT o.customer_id FROM orders o)"
+}

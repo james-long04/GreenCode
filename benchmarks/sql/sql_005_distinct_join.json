@@ -1,0 +1,11 @@
+{
+  "id": "sql_005_distinct_join",
+  "title": "DISTINCT used to collapse a one-to-many join",
+  "language": "sql",
+  "category": "unnecessary_work",
+  "description": "",
+  "expected_rules": [
+    "SQL007"
+  ],
+  "source": "SELECT DISTINCT c.id, c.email\nFROM customers c\nJOIN orders o ON o.customer_id = c.id\nWHERE o.status = 'cancelled'"
+}

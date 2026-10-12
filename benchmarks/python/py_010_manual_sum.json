@@ -1,0 +1,28 @@
+{
+  "id": "py_010_manual_sum",
+  "title": "Manual accumulation loop",
+  "language": "python",
+  "category": "redundant_operations",
+  "description": "",
+  "expected_rules": [
+    "PY010"
+  ],
+  "source": "def solve(values):\n    total = 0\n    for v in values:\n        total += v\n    return total\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "([1, 2, 3],)",
+      "expected": 6
+    },
+    {
+      "name": "empty",
+      "args": "([],)",
+      "expected": 0
+    }
+  ],
+  "benchmark": {
+    "setup": "values = list(range(3000000))",
+    "call": "solve(values)"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "id": "sql_004_leading_wildcard_like",
+  "title": "Leading wildcard LIKE on email",
+  "language": "sql",
+  "category": "indexing",
+  "description": "",
+  "expected_rules": [
+    "SQL004"
+  ],
+  "source": "SELECT id, email FROM customers WHERE email LIKE '%@tudublin.ie' AND is_active"
+}

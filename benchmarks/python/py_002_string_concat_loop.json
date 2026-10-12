@@ -1,0 +1,28 @@
+{
+  "id": "py_002_string_concat_loop",
+  "title": "String building with += in a loop",
+  "language": "python",
+  "category": "allocations",
+  "description": "",
+  "expected_rules": [
+    "PY002"
+  ],
+  "source": "def solve(rows):\n    csv = \"\"\n    for r in rows:\n        csv += str(r[0]) + \",\" + r[1] + \"\\n\"\n    return csv\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "two_rows",
+      "args": "([(1, 'a'), (2, 'b')],)",
+      "expected": "1,a\n2,b\n"
+    },
+    {
+      "name": "empty",
+      "args": "([],)",
+      "expected": ""
+    }
+  ],
+  "benchmark": {
+    "setup": "rows = [(i, 'name%d' % i) for i in range(200000)]",
+    "call": "solve(rows)"
+  }
+}

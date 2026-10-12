@@ -1,0 +1,24 @@
+{
+  "id": "py_018_no_known_pattern",
+  "title": "Control case: already efficient code",
+  "language": "python",
+  "category": "control",
+  "description": "No rule should fire. Used to check that the GreenCode condition does not degrade already-efficient code.",
+  "expected_rules": [],
+  "source": "def solve(values):\n    lookup = set(values)\n    return [v in lookup for v in range(0, 100000, 7)]\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "([0, 7, 14],)"
+    },
+    {
+      "name": "empty",
+      "args": "([],)"
+    }
+  ],
+  "benchmark": {
+    "setup": "values = list(range(0, 200000, 3))",
+    "call": "solve(values)"
+  }
+}

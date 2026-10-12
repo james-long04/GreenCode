@@ -1,0 +1,12 @@
+{
+  "id": "sql_008_order_by_no_limit_select_star",
+  "title": "SELECT * sorted without LIMIT for a recent-orders feed",
+  "language": "sql",
+  "category": "unnecessary_work",
+  "description": "",
+  "expected_rules": [
+    "SQL001",
+    "SQL009"
+  ],
+  "source": "SELECT * FROM orders WHERE customer_id = 1234 ORDER BY created_at DESC"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "sql_011_control_efficient",
+  "title": "Control case: already index-friendly query",
+  "language": "sql",
+  "category": "control",
+  "description": "No rule should fire; checks that the GreenCode condition does not degrade efficient SQL.",
+  "expected_rules": [],
+  "source": "SELECT id, total_cents FROM orders WHERE customer_id = 500 AND status = 'paid'"
+}

@@ -1,0 +1,39 @@
+{
+  "id": "py_001_membership_list_in_loop",
+  "title": "Membership test against a list inside a loop",
+  "language": "python",
+  "category": "data_structures",
+  "description": "Classic O(n*m) scan that becomes O(n+m) with a set.",
+  "expected_rules": [
+    "PY001"
+  ],
+  "source": "def solve(items, targets):\n    allowed = [x for x in items]\n    result = []\n    for t in targets:\n        if t in allowed:\n            result.append(t)\n    return result\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "small",
+      "args": "([1, 2, 3, 4], [2, 5, 4])",
+      "expected": [
+        2,
+        4
+      ]
+    },
+    {
+      "name": "empty",
+      "args": "([], [1, 2])",
+      "expected": []
+    },
+    {
+      "name": "strings",
+      "args": "(['a', 'b'], ['b', 'c', 'a'])",
+      "expected": [
+        "b",
+        "a"
+      ]
+    }
+  ],
+  "benchmark": {
+    "setup": "import random\nrng = random.Random(0)\ndata = [rng.randrange(100000) for _ in range(8000)]\nq = [rng.randrange(120000) for _ in range(8000)]",
+    "call": "solve(data, q)"
+  }
+}

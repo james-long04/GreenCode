@@ -1,0 +1,31 @@
+{
+  "id": "py_009_query_in_loop",
+  "title": "N+1 query pattern against a fake database cursor",
+  "language": "python",
+  "category": "database",
+  "description": "The cursor is a stand-in so the case is self-contained; the per-call cost models a round-trip.",
+  "expected_rules": [
+    "PY009"
+  ],
+  "source": "class _Cursor:\n    \"\"\"Stand-in for a DB-API cursor with a per-call latency cost.\"\"\"\n    def __init__(self, table):\n        self.table = table\n        self.rows = []\n    def execute(self, sql, params=()):\n        # Simulate round-trip + planning cost per statement.\n        _ = sum(range(2000))\n        if \"ANY\" in sql or \" IN \" in sql:\n            wanted = set(params[0])\n            self.rows = [r for r in self.table if r[0] in wanted]\n        else:\n            self.rows = [r for r in self.table if r[0] == params[0]]\n    def fetchone(self):\n        return self.rows[0] if self.rows else None\n    def fetchall(self):\n        return list(self.rows)\n\ndef solve(table, ids):\n    cur = _Cursor(table)\n    names = {}\n    for i in ids:\n        cur.execute(\"SELECT id, name FROM users WHERE id = %s\", (i,))\n        row = cur.fetchone()\n        if row:\n            names[i] = row[1]\n    return names\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "([(1, 'a'), (2, 'b'), (3, 'c')], [3, 1, 9])",
+      "expected": {
+        "3": "c",
+        "1": "a"
+      }
+    },
+    {
+      "name": "empty",
+      "args": "([(1, 'a')], [])",
+      "expected": {}
+    }
+  ],
+  "benchmark": {
+    "setup": "table = [(i, 'user%d' % i) for i in range(5000)]\nids = list(range(0, 5000, 2))",
+    "call": "solve(table, ids)"
+  }
+}

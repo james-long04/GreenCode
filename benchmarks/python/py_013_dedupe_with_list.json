@@ -1,0 +1,32 @@
+{
+  "id": "py_013_dedupe_with_list",
+  "title": "De-duplication using `not in list`",
+  "language": "python",
+  "category": "data_structures",
+  "description": "",
+  "expected_rules": [
+    "PY001"
+  ],
+  "source": "def solve(events):\n    seen = []\n    unique = []\n    for e in events:\n        if e not in seen:\n            seen.append(e)\n            unique.append(e)\n    return unique\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "([3, 1, 3, 2, 1],)",
+      "expected": [
+        3,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "empty",
+      "args": "([],)",
+      "expected": []
+    }
+  ],
+  "benchmark": {
+    "setup": "import random\nrng = random.Random(3)\nevents = [rng.randrange(6000) for _ in range(12000)]",
+    "call": "solve(events)"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "py_017_nested_membership_tuple",
+  "title": "Membership test against a tuple literal in a hot loop",
+  "language": "python",
+  "category": "data_structures",
+  "description": "",
+  "expected_rules": [
+    "PY001"
+  ],
+  "source": "def solve(tokens):\n    kept = []\n    for t in tokens:\n        if t not in (\"the\", \"a\", \"an\", \"and\", \"or\", \"but\", \"of\", \"to\", \"in\", \"on\", \"for\", \"with\"):\n            kept.append(t)\n    return kept\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "(['the', 'cat', 'and', 'dog'],)",
+      "expected": [
+        "cat",
+        "dog"
+      ]
+    },
+    {
+      "name": "empty",
+      "args": "([],)",
+      "expected": []
+    }
+  ],
+  "benchmark": {
+    "setup": "tokens = (['the', 'quick', 'brown', 'fox', 'and', 'a', 'dog', 'with', 'zeal'] * 150000)",
+    "call": "solve(tokens)"
+  }
+}

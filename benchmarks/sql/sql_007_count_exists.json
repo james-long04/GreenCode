@@ -1,0 +1,11 @@
+{
+  "id": "sql_007_count_exists",
+  "title": "COUNT(*) > 0 used for an existence check",
+  "language": "sql",
+  "category": "unnecessary_work",
+  "description": "",
+  "expected_rules": [
+    "SQL012"
+  ],
+  "source": "SELECT p.id, p.name\nFROM products p\nWHERE (SELECT COUNT(*) FROM order_items oi WHERE oi.product_id = p.id AND oi.quantity >= 4) > 0\n  AND p.category = 'books'"
+}

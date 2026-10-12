@@ -1,0 +1,11 @@
+{
+  "id": "sql_010_in_subquery_large",
+  "title": "IN (subquery) over a large table",
+  "language": "sql",
+  "category": "joins",
+  "description": "",
+  "expected_rules": [
+    "SQL010"
+  ],
+  "source": "SELECT o.id, o.total_cents\nFROM orders o\nWHERE o.id IN (SELECT oi.order_id FROM order_items oi WHERE oi.product_id = 77)"
+}

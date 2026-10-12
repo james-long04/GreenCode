@@ -1,0 +1,11 @@
+{
+  "id": "sql_006_lower_email_predicate",
+  "title": "lower() on the filtered column defeats the index",
+  "language": "sql",
+  "category": "indexing",
+  "description": "",
+  "expected_rules": [
+    "SQL003"
+  ],
+  "source": "SELECT id, full_name FROM customers WHERE lower(email) = 'user4242@tcd.ie'"
+}

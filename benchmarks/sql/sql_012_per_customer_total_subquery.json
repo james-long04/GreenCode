@@ -1,0 +1,12 @@
+{
+  "id": "sql_012_per_customer_total_subquery",
+  "title": "Correlated SUM subquery with an arithmetic predicate",
+  "language": "sql",
+  "category": "joins",
+  "description": "",
+  "expected_rules": [
+    "SQL006",
+    "SQL003"
+  ],
+  "source": "SELECT c.id,\n       (SELECT SUM(o.total_cents) FROM orders o WHERE o.customer_id = c.id) AS spend\nFROM customers c\nWHERE c.id * 1 BETWEEN 100 AND 2000"
+}

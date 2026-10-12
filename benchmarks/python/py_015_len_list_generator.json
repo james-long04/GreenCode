@@ -1,0 +1,28 @@
+{
+  "id": "py_015_len_list_generator",
+  "title": "len(list(generator)) to count matches",
+  "language": "python",
+  "category": "allocations",
+  "description": "",
+  "expected_rules": [
+    "PY008"
+  ],
+  "source": "def solve(values, threshold):\n    return len(list(v for v in values if v > threshold))\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "([1, 5, 10], 4)",
+      "expected": 2
+    },
+    {
+      "name": "none",
+      "args": "([1], 4)",
+      "expected": 0
+    }
+  ],
+  "benchmark": {
+    "setup": "values = list(range(3000000))",
+    "call": "solve(values, 1500000)"
+  }
+}

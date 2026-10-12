@@ -1,0 +1,11 @@
+{
+  "id": "sql_002_correlated_count_subquery",
+  "title": "Correlated COUNT(*) subquery per customer",
+  "language": "sql",
+  "category": "joins",
+  "description": "",
+  "expected_rules": [
+    "SQL006"
+  ],
+  "source": "SELECT c.id, c.email,\n       (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id) AS order_count\nFROM customers c\nWHERE c.country = 'IE'"
+}

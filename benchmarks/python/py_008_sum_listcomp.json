@@ -1,0 +1,28 @@
+{
+  "id": "py_008_sum_listcomp",
+  "title": "sum() over a materialised list comprehension",
+  "language": "python",
+  "category": "allocations",
+  "description": "",
+  "expected_rules": [
+    "PY008"
+  ],
+  "source": "def solve(values):\n    return sum([v * v for v in values if v % 2 == 0])\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "([1, 2, 3, 4],)",
+      "expected": 20
+    },
+    {
+      "name": "empty",
+      "args": "([],)",
+      "expected": 0
+    }
+  ],
+  "benchmark": {
+    "setup": "values = list(range(2000000))",
+    "call": "solve(values)"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "id": "sql_009_date_cast_predicate",
+  "title": "Casting a timestamp column to date in WHERE",
+  "language": "sql",
+  "category": "indexing",
+  "description": "",
+  "expected_rules": [
+    "SQL003"
+  ],
+  "source": "SELECT id, total_cents FROM orders WHERE created_at::date = DATE '2023-06-15'"
+}

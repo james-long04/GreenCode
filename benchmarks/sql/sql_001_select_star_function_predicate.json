@@ -1,0 +1,12 @@
+{
+  "id": "sql_001_select_star_function_predicate",
+  "title": "SELECT * with a function wrapped around an indexed column",
+  "language": "sql",
+  "category": "indexing",
+  "description": "",
+  "expected_rules": [
+    "SQL001",
+    "SQL003"
+  ],
+  "source": "SELECT * FROM orders WHERE EXTRACT(YEAR FROM created_at) = 2023 AND status = 'paid'"
+}

@@ -1,0 +1,37 @@
+{
+  "id": "py_006_nested_loop_join",
+  "title": "Nested loops joining two lists on a key",
+  "language": "python",
+  "category": "data_structures",
+  "description": "",
+  "expected_rules": [
+    "PY006"
+  ],
+  "source": "def solve(orders, customers):\n    joined = []\n    for o in orders:\n        for c in customers:\n            if o[\"customer_id\"] == c[\"id\"]:\n                joined.append((o[\"id\"], c[\"name\"]))\n    return joined\n",
+  "entry_point": "solve",
+  "tests": [
+    {
+      "name": "basic",
+      "args": "([{'id': 1, 'customer_id': 7}, {'id': 2, 'customer_id': 9}], [{'id': 7, 'name': 'A'}, {'id': 9, 'name': 'B'}])",
+      "expected": [
+        [
+          1,
+          "A"
+        ],
+        [
+          2,
+          "B"
+        ]
+      ]
+    },
+    {
+      "name": "no_match",
+      "args": "([{'id': 1, 'customer_id': 3}], [{'id': 7, 'name': 'A'}])",
+      "expected": []
+    }
+  ],
+  "benchmark": {
+    "setup": "customers = [{'id': i, 'name': 'c%d' % i} for i in range(3000)]\norders = [{'id': i, 'customer_id': (i * 7) % 3000} for i in range(3000)]",
+    "call": "solve(orders, customers)"
+  }
+}
