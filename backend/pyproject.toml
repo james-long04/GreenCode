@@ -1,0 +1,14 @@
+[project]
+name = "greencode-backend"
+version = "0.1.0"
+description = "GreenCode: static-analysis-guided AI optimisation for sustainable Python and SQL"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"

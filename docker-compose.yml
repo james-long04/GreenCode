@@ -1,0 +1,84 @@
+
+# GreenCode development stack.
+#
+#   docker compose up -d postgres ollama        # infrastructure only (run backend/frontend locally)
+#   docker compose up --build                   # everything
+#   docker compose exec ollama ollama pull qwen2.5-coder:7b
+#
+# NOTE on measurement: energy counters (RAPL) are only visible inside a container
+# when /sys/class/powercap is mounted and the container runs privileged. For the
+# dissertation experiments run the backend directly on the host (see README) so
+# that RAPL / CodeCarbon can read hardware counters; use Docker for PostgreSQL
+# and Ollama, which keeps the benchmark environment reproducible.
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: greencode
+      POSTGRES_PASSWORD: greencode
+      POSTGRES_DB: greencode
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/seed:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U greencode"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    # Uncomment for NVIDIA GPUs:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      GREENCODE_DATABASE_URL: postgresql+psycopg://greencode:greencode@postgres:5432/greencode
+      GREENCODE_BENCHMARK_DATABASE_URL: postgresql://greencode:greencode@postgres:5432/greencode
+      GREENCODE_OLLAMA_BASE_URL: http://ollama:11434
+      GREENCODE_OLLAMA_MODEL: ${GREENCODE_OLLAMA_MODEL:-qwen2.5-coder:7b}
+      GREENCODE_LLM_PROVIDER: ${GREENCODE_LLM_PROVIDER:-ollama}
+      GREENCODE_ENERGY_METHOD: ${GREENCODE_ENERGY_METHOD:-auto}
+      GREENCODE_CORS_ORIGINS: '["http://localhost:5173","http://localhost:3000"]'
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+    # Sandboxed candidate execution happens in subprocesses inside this container.
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 2g
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      VITE_API_BASE: http://localhost:8000/api
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  ollama:
