@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import os
-import resource
 import subprocess
 import sys
 import tempfile
@@ -15,6 +14,11 @@ from typing import Any
 from app.config import Settings, get_settings
 
 WORKER_PATH = Path(__file__).with_name("worker.py")
+
+try:  # POSIX only; on Windows the sandbox relies on the timeout and the worker-side hardening.
+    import resource
+except ImportError:  # pragma: no cover - Windows
+    resource = None  # type: ignore[assignment]
 
 
 @dataclass
@@ -62,8 +66,14 @@ def run_job(job: dict[str, Any], settings: Settings | None = None,
     settings = settings or get_settings()
     timeout = timeout or settings.sandbox_timeout_seconds
     python = settings.python_executable or sys.executable
-    env = {"PYTHONHASHSEED": "0", "PYTHONDONTWRITEBYTECODE": "1", "LANG": "C.UTF-8",
-           "PATH": "/usr/bin:/bin"}
+    env = {"PYTHONHASHSEED": "0", "PYTHONDONTWRITEBYTECODE": "1", "LANG": "C.UTF-8", "PYTHONIOENCODING": "utf-8"}
+    if os.name == "nt":
+        # The Windows loader needs SYSTEMROOT (and friends) to start python.exe at all.
+        for key in ("SYSTEMROOT", "SYSTEMDRIVE", "PATH", "TEMP", "TMP", "COMSPEC", "PATHEXT", "WINDIR"):
+            if key in os.environ:
+                env[key] = os.environ[key]
+    else:
+        env["PATH"] = "/usr/bin:/bin"
     with tempfile.TemporaryDirectory(prefix="greencode-sandbox-") as cwd:
         try:
             proc = subprocess.run(
@@ -74,7 +84,7 @@ def run_job(job: dict[str, Any], settings: Settings | None = None,
                 timeout=timeout,
                 cwd=cwd,
                 env=env,
-                preexec_fn=_make_limiter(settings) if os.name == "posix" else None,
+                preexec_fn=_make_limiter(settings) if (os.name == "posix" and resource is not None) else None,
             )
         except subprocess.TimeoutExpired:
             return SandboxResult(ok=False, failure_type="timeout",

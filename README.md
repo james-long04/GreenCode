@@ -117,6 +117,31 @@ python scripts/export_results.py --project "Experiment 1" --out ../results   # C
 Or use the **Experiments** page in the dashboard, which runs the same code and
 shows per-case results, condition summaries and the H1–H4 tests live.
 
+### Windows
+
+Everything runs natively on Windows 10/11 (PowerShell):
+
+```powershell
+docker compose up -d postgres ollama
+docker compose exec ollama ollama pull qwen2.5-coder:7b
+cd backend
+py -3.12 -m venv .venv; .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+copy .env.example .env
+python scripts\init_db.py
+python scripts\seed_bench_dataset.py
+uvicorn app.main:app --reload --port 8000
+```
+
+and in a second terminal `cd frontend; npm install; npm run dev`.
+
+Differences on Windows: the sandbox cannot apply POSIX memory/CPU rlimits, so it
+relies on the timeout plus the worker-side hardening (no network, no subprocesses,
+no file writes). RAPL is unavailable; energy comes from CodeCarbon (which uses
+Intel Power Gadget / TDP on Windows) or the coefficient estimate. If
+`pip install codecarbon` fails, remove it from `requirements.txt` — the estimate
+is used automatically.
+
 ### Offline / no GPU
 
 `GREENCODE_LLM_PROVIDER=mock` runs the entire pipeline with a deterministic stand-in
@@ -207,8 +232,8 @@ every benchmark run for reproducibility.
   stored alongside any measurement so the two can be compared (H4 discussion).
 * CO₂e uses the SEAI grid factor stored in `carbon_factors`; update it and cite
   the release used.
-* The Python sandbox is defence-in-depth, not a security boundary; run the
-  backend in the provided container for untrusted inputs.
+* The Python sandbox is defence-in-depth, not a security boundary (and has no
+  rlimits on Windows); run the backend in the provided container for untrusted inputs.
 
 ## Documentation
 

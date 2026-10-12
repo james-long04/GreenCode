@@ -27,11 +27,33 @@ import gc
 import io
 import json
 import os
-import resource
 import sys
 import time
 import traceback
 import types
+
+try:
+    import resource
+except ImportError:  # Windows
+    resource = None  # type: ignore[assignment]
+
+
+def _rusage():  # type: ignore[no-untyped-def]
+    """(user_s, system_s, peak_rss_kb) portable across POSIX and Windows."""
+    if resource is not None:
+        ru = resource.getrusage(resource.RUSAGE_SELF)
+        return ru.ru_utime, ru.ru_stime, ru.ru_maxrss
+    try:
+        import psutil  # available on Windows installs via requirements.txt
+
+        p = psutil.Process()
+        ct = p.cpu_times()
+        mi = p.memory_info()
+        peak = getattr(mi, "peak_wset", mi.rss)
+        return ct.user, ct.system, peak / 1024
+    except Exception:  # noqa: BLE001
+        t = time.process_time()
+        return t, 0.0, 0
 
 
 def _harden() -> None:
@@ -162,7 +184,7 @@ def run_benchmark(job: dict) -> dict:
         return {"ok": False, "failure_type": "runtime_error", "error": f"warm-up failed: {err.__class__.__name__}: {err}"}
 
     samples_ns: list[int] = []
-    ru0 = resource.getrusage(resource.RUSAGE_SELF)
+    u0, s0, _ = _rusage()
     cpu0 = time.process_time_ns()
     try:
         for _ in range(reps):
@@ -178,14 +200,14 @@ def run_benchmark(job: dict) -> dict:
     except Exception as err:  # noqa: BLE001
         return {"ok": False, "failure_type": "runtime_error", "error": f"{err.__class__.__name__}: {err}"}
     cpu1 = time.process_time_ns()
-    ru1 = resource.getrusage(resource.RUSAGE_SELF)
+    u1, s1, peak_kb = _rusage()
     return {
         "ok": True,
         "samples_ms": [s / 1e6 for s in samples_ns],
         "cpu_time_ms": (cpu1 - cpu0) / 1e6,
-        "user_time_ms": (ru1.ru_utime - ru0.ru_utime) * 1000,
-        "system_time_ms": (ru1.ru_stime - ru0.ru_stime) * 1000,
-        "peak_rss_kb": ru1.ru_maxrss,  # Linux reports KiB
+        "user_time_ms": (u1 - u0) * 1000,
+        "system_time_ms": (s1 - s0) * 1000,
+        "peak_rss_kb": peak_kb,
         "repetitions": reps,
         "warmup": warmup,
     }
