@@ -572,13 +572,15 @@ button.primary:hover:not(:disabled) {
   border-color: var(--accent-hover);
 }
 
-button.quiet {
+button.quiet,
+.btn.quiet {
   border-color: transparent;
   background: transparent;
   color: var(--text-2);
 }
 
-button.quiet:hover:not(:disabled) {
+button.quiet:hover:not(:disabled),
+.btn.quiet:hover {
   background: var(--surface-3);
   color: var(--text);
   border-color: transparent;
@@ -588,7 +590,8 @@ button.danger {
   color: var(--bad-fg);
 }
 
-button.small {
+button.small,
+.btn.small {
   min-height: 28px;
   padding: 3px 10px;
   font-size: var(--text-sm);
@@ -600,6 +603,8 @@ button.icon-only {
 }
 
 input[type="text"],
+input[type="number"],
+input[type="password"],
 input:not([type]),
 select,
 textarea {
@@ -651,6 +656,106 @@ label.field .help {
   color: var(--text-3);
 }
 
+input[type="number"] {
+  font-variant-numeric: tabular-nums;
+  width: 100%;
+}
+
+/* Settings form: label column, control column. */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+}
+
+.settings-grid label.field {
+  align-content: start;
+}
+
+.settings-grid .field-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+/* In-page jump links for a long page. */
+.subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.subnav a {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+
+.subnav a:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Server log: one line per record, newest first. */
+.log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  max-height: 480px;
+  overflow: auto;
+}
+
+.log li {
+  display: grid;
+  grid-template-columns: 7.5rem 4.5rem minmax(0, 1fr);
+  gap: 12px;
+  padding: 5px 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-2);
+}
+
+.log li:last-child {
+  border-bottom: 0;
+}
+
+.log .log-time {
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.log .log-level {
+  font-weight: 600;
+}
+
+.log li[data-level="WARNING"] .log-level {
+  color: var(--warn-fg);
+}
+
+.log li[data-level="ERROR"] .log-level,
+.log li[data-level="CRITICAL"] .log-level {
+  color: var(--bad-fg);
+}
+
+.log li[data-level="ERROR"],
+.log li[data-level="CRITICAL"] {
+  color: var(--text);
+}
+
+.log .log-msg {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 label.check {
   display: inline-flex;
   align-items: center;
@@ -697,6 +802,7 @@ label.check {
 /* ------------------------------------------------------------------ */
 .table-wrap {
   overflow-x: auto;
+  position: relative;
 }
 
 table {
@@ -722,8 +828,10 @@ thead th {
   background: var(--surface);
 }
 
-th.num {
+th.num,
+td.num {
   text-align: right;
+  white-space: nowrap;
 }
 
 tbody td {
@@ -1433,6 +1541,15 @@ details.disclosure > .disclosure-body {
 }
 
 @media (max-width: 560px) {
+  .settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .log li {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+  }
+  .log .log-time {
+    display: none;
+  }
   .metrics {
     grid-template-columns: minmax(0, 1fr);
   }

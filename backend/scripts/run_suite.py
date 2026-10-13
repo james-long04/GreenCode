@@ -49,7 +49,7 @@ def main() -> int:
 
     if args.repetitions:
         os.environ["GREENCODE_BENCHMARK_REPETITIONS"] = str(args.repetitions)
-        get_settings.cache_clear()
+        get_settings.cache_clear()  # type: ignore[attr-defined]
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
     cases = load_cases(language=args.language)

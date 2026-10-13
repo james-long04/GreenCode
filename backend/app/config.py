@@ -61,8 +61,58 @@ class Settings(BaseSettings):
     # --- api -------------------------------------------------------------
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
     benchmark_suite_dir: str = "../benchmarks"
+    # Optional shared secret for /api/admin/*. Unset means the admin API is open,
+    # which is fine on localhost and not fine on a public host.
+    admin_token: str | None = None
+
+
+# Settings that the admin panel may change at runtime. They apply to this process
+# only (a restart reverts to the environment), and every optimisation records the
+# values it actually ran with, so reproducibility is not affected.
+RUNTIME_ADJUSTABLE: frozenset[str] = frozenset({
+    "llm_provider", "ollama_model", "ollama_base_url", "llm_temperature", "llm_seed",
+    "benchmark_warmup_runs", "benchmark_repetitions", "benchmark_timeout_seconds",
+    "energy_method", "carbon_factor_region", "estimate_cpu_tdp_watts", "estimate_pue",
+    "sandbox_timeout_seconds", "sandbox_memory_limit_mb",
+})
+
+_overrides: dict[str, object] = {}
 
 
 @lru_cache
-def get_settings() -> Settings:
+def _env_settings() -> Settings:
     return Settings()
+
+
+def get_settings() -> Settings:
+    """Effective settings: environment values with any runtime overrides applied."""
+    base = _env_settings()
+    if not _overrides:
+        return base
+    return base.model_copy(update=dict(_overrides))
+
+
+def runtime_overrides() -> dict[str, object]:
+    return dict(_overrides)
+
+
+def set_runtime_overrides(values: dict[str, object]) -> Settings:
+    """Validate and apply overrides for adjustable keys. Returns the effective settings."""
+    unknown = set(values) - RUNTIME_ADJUSTABLE
+    if unknown:
+        raise ValueError(f"not adjustable at runtime: {', '.join(sorted(unknown))}")
+    candidate = _env_settings().model_copy(update={**_overrides, **values})
+    # Re-validate through pydantic so a bad type or value is rejected before it is applied.
+    validated = Settings.model_validate(candidate.model_dump())
+    for key in values:
+        _overrides[key] = getattr(validated, key)
+    return get_settings()
+
+
+def clear_runtime_overrides() -> Settings:
+    _overrides.clear()
+    return get_settings()
+
+
+# Scripts that change os.environ call get_settings.cache_clear(); keep that working.
+get_settings.cache_clear = _env_settings.cache_clear  # type: ignore[attr-defined]

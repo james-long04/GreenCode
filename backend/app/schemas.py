@@ -198,3 +198,35 @@ class RuleOut(BaseModel):
     category: str
     severity: str
     description: str
+
+
+# --- admin -------------------------------------------------------------------
+
+class CarbonFactorIn(BaseModel):
+    region: str = Field(min_length=1, max_length=16)
+    year: int = Field(ge=1990, le=2100)
+    grams_co2e_per_kwh: float = Field(gt=0)
+    source: str = Field(min_length=1, max_length=300)
+    notes: str | None = None
+    is_default: bool = False
+
+
+class SettingsUpdate(BaseModel):
+    """Runtime overrides; only keys in app.config.RUNTIME_ADJUSTABLE are accepted."""
+
+    values: dict[str, Any]
+
+
+class ModelPullRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=120)
+
+
+class ModelPullStatus(BaseModel):
+    name: str
+    status: str  # running | completed | failed
+    detail: str = ""
+    completed_bytes: int | None = None
+    total_bytes: int | None = None
+    error: str | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None

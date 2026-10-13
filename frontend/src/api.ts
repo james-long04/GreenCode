@@ -1,4 +1,10 @@
 import type {
+  AdminModels,
+  AdminOverview,
+  AdminSettings,
+  CarbonFactorInput,
+  LogEntry,
+  ModelPull,
   Analysis,
   AnalysisSummary,
   CarbonFactor,
@@ -17,10 +23,33 @@ import type {
 
 const BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? "/api";
 
+const ADMIN_TOKEN_KEY = "greencode.adminToken";
+
+export const adminToken = {
+  get: (): string => {
+    try {
+      return localStorage.getItem(ADMIN_TOKEN_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  },
+  set: (value: string) => {
+    try {
+      if (value) localStorage.setItem(ADMIN_TOKEN_KEY, value);
+      else localStorage.removeItem(ADMIN_TOKEN_KEY);
+    } catch {
+      /* storage unavailable */
+    }
+  },
+};
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const token = adminToken.get();
+  if (path.startsWith("/admin") && token) headers["X-Admin-Token"] = token;
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: { ...headers, ...(init?.headers as Record<string, string> | undefined) },
   });
   if (!res.ok) {
     let detail = res.statusText;
@@ -86,4 +115,26 @@ export const api = {
     request<ResultRow[]>(`/results${qs({ project_id: projectId, language })}`),
   resultsSummary: (projectId?: string, language?: Language) =>
     request<ResultsSummary>(`/results/summary${qs({ project_id: projectId, language })}`),
+
+  admin: {
+    overview: () => request<AdminOverview>("/admin/overview"),
+    settings: () => request<AdminSettings>("/admin/settings"),
+    updateSettings: (values: Record<string, unknown>) =>
+      request<AdminSettings>("/admin/settings", { method: "PUT", body: JSON.stringify({ values }) }),
+    resetSettings: () => request<AdminSettings>("/admin/settings", { method: "DELETE" }),
+    models: () => request<AdminModels>("/admin/models"),
+    pullModel: (name: string) => request<ModelPull>("/admin/models/pull", { method: "POST", body: JSON.stringify({ name }) }),
+    createCarbonFactor: (body: CarbonFactorInput) =>
+      request<CarbonFactor>("/admin/carbon-factors", { method: "POST", body: JSON.stringify(body) }),
+    updateCarbonFactor: (id: string, body: CarbonFactorInput) =>
+      request<CarbonFactor>(`/admin/carbon-factors/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    deleteCarbonFactor: (id: string) => request<void>(`/admin/carbon-factors/${id}`, { method: "DELETE" }),
+    markStuckFailed: (olderThanMinutes: number) =>
+      request<{ updated: number }>(`/admin/maintenance/mark-stuck-failed${qs({ older_than_minutes: olderThanMinutes })}`, { method: "POST" }),
+    deleteOrphanAnalyses: () => request<{ deleted: number }>("/admin/maintenance/orphan-analyses", { method: "DELETE" }),
+    deleteProjectRuns: (projectId: string, status: "failed" | "rejected") =>
+      request<{ deleted: number }>(`/admin/maintenance/project-runs/${projectId}${qs({ status })}`, { method: "DELETE" }),
+    logs: (limit = 200, level?: string) => request<LogEntry[]>(`/admin/logs${qs({ limit, level })}`),
+    exportUrl: (projectId?: string) => `${BASE}/admin/export/results.csv${qs({ project_id: projectId })}`,
+  },
 };

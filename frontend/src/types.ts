@@ -266,3 +266,82 @@ export interface CarbonFactor {
   notes: string | null;
   is_default: boolean;
 }
+
+// --- admin -------------------------------------------------------------------
+
+export interface AdminOverview {
+  store: {
+    counts: Record<"projects" | "analyses" | "findings" | "optimisations" | "benchmark_runs" | "measurements", number>;
+    optimisations_by_status: Record<string, number>;
+    stuck_optimisations: number;
+    orphan_analyses: number;
+    first_run: string | null;
+    last_run: string | null;
+    database_bytes: number | null;
+    postgres_version: string | null;
+    database_url: string;
+  };
+  llm: Health["llm"];
+  energy: Health["energy"] & { configured: string };
+  host: {
+    python: string;
+    platform: string;
+    machine: string;
+    logical_cores: number | null;
+    physical_cores: number | null;
+    memory_total_gb: number;
+    memory_used_percent: number;
+    cpu_percent: number;
+    pid: number;
+    cwd: string;
+  };
+  admin_token_set: boolean;
+}
+
+export interface AdminSettings {
+  values: Record<string, unknown>;
+  overrides: Record<string, unknown>;
+  adjustable: string[];
+}
+
+export interface InstalledModel {
+  name: string;
+  size_bytes: number | null;
+  modified_at: string | null;
+  parameter_size: string | null;
+  quantization: string | null;
+}
+
+export interface ModelPull {
+  name: string;
+  status: "running" | "completed" | "failed";
+  detail: string;
+  completed_bytes: number | null;
+  total_bytes: number | null;
+  error: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+}
+
+export interface AdminModels {
+  health: Health["llm"];
+  configured: string;
+  installed: InstalledModel[];
+  pulls: ModelPull[];
+}
+
+export interface CarbonFactorInput {
+  region: string;
+  year: number;
+  grams_co2e_per_kwh: number;
+  source: string;
+  notes: string | null;
+  is_default: boolean;
+}
+
+export interface LogEntry {
+  time: string;
+  level: "DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL";
+  logger: string;
+  message: string;
+}

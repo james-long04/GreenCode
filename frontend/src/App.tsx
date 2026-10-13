@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactElement } from "react";
 import { api } from "./api";
 import { Icon, type IconName } from "./components/icons";
 import { useDocumentTitle, useHashRoute, useLocalStorage, useTheme } from "./hooks";
+import { AdminPage } from "./pages/AdminPage";
 import { AnalysePage, AnalysisDetailPage } from "./pages/AnalysePage";
 import { ExperimentsPage } from "./pages/ExperimentsPage";
 import { OptimisationPage } from "./pages/OptimisationPage";
@@ -17,6 +18,7 @@ const NAV: { path: string; label: string; icon: IconName; matches: string[] }[] 
   { path: "/analyse", label: "Analyse", icon: "magnifying-glass", matches: ["analyse", "analyses", "optimisations"] },
   { path: "/experiments", label: "Experiments", icon: "flask", matches: ["experiments"] },
   { path: "/rules", label: "Rules & assumptions", icon: "list-checks", matches: ["rules"] },
+  { path: "/admin", label: "Admin", icon: "gear", matches: ["admin"] },
 ];
 
 const TITLES: Record<string, string> = {
@@ -27,6 +29,7 @@ const TITLES: Record<string, string> = {
   optimisations: "Optimisation",
   experiments: "Experiments",
   rules: "Rules & assumptions",
+  admin: "Admin",
 };
 
 export default function App() {
@@ -73,6 +76,9 @@ export default function App() {
       break;
     case "rules":
       page = <RulesPage />;
+      break;
+    case "admin":
+      page = <AdminPage projectId={pid} />;
       break;
     default:
       page = <OverviewPage projectId={pid} navigate={navigate} health={health} />;

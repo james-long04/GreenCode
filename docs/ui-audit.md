@@ -29,3 +29,18 @@ One finding, accepted: `overused-font` (Geist). Kept deliberately: it is self-ho
 ## Not done
 - Automated visual regression tests; screenshots were checked by hand against a mock API.
 - Real `npm run build` was not run in the authoring environment (no registry access); bundling was verified with esbuild. No dependencies were added.
+
+## Admin page (added after the first pass)
+
+Built with the same skills. Decisions worth recording:
+
+| Heuristic | Decision |
+|-----------|----------|
+| Visibility of status | Metric strip plus Pipeline/Host panels; stuck-run alert links straight to the fix; model pulls show a progress bar and keep running off-page. |
+| Match with real world | Setting keys are shown verbatim (they are the env-var names) with a plain-language line under each. |
+| User control | Every destructive action is an inline confirm; settings form has Discard; overrides can be cleared in one click. |
+| Error prevention | Apply is disabled until something changed; numbers use number inputs; backend refuses to edit or delete a carbon factor that evidence references (409) and the UI explains why. |
+| Consistency | Same panel, table, badge and alert components as the rest of the dashboard; sub-navigation reuses the quiet link style. |
+| Minimalism | Fixed settings are behind a disclosure; only runtime-adjustable keys are in the form. |
+| Help | The token form says exactly which variable it matches; the open-API notice appears only when no token is set. |
+| Security | Token lives in localStorage of that browser only and is sent solely to `/api/admin/*`. |

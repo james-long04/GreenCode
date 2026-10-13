@@ -223,6 +223,18 @@ repetitions/warm-up, energy method and the CPU TDP used by the estimate model.
 The environment snapshot (CPU, cores, Python version, settings) is stored with
 every benchmark run for reproducibility.
 
+### Admin panel
+
+The dashboard's **Admin** page (`#/admin`, API under `/api/admin/*`) is for the
+person running the experiment: evidence-store counts and host status, runtime
+overrides of benchmark/model/energy settings (process-only; a restart reverts to
+the environment, and every run records the values it used), Ollama model listing
+and pulls, carbon-factor management (values that evidence already references are
+locked), maintenance (mark stuck runs failed, delete orphan analyses or
+failed/rejected runs; benchmarked evidence is never deleted) and a CSV export of
+all results. Set `GREENCODE_ADMIN_TOKEN` to require an `X-Admin-Token` header;
+unset, the admin API is open, which is only acceptable on localhost.
+
 ## Measurement caveats (for the dissertation)
 
 * RAPL and CodeCarbon measure the **whole machine**; results are only comparable
