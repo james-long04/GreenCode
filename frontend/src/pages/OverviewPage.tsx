@@ -1,101 +1,284 @@
 import { api } from "../api";
 import { ConditionBars, Legend } from "../components/charts";
-import { Badge, Empty, ErrorBox, Stat, fmt } from "../components/ui";
+import { Icon } from "../components/icons";
+import { Alert, Badge, Command, ErrorBox, LoadingBlock, PageHeader, Section, Term, fmt } from "../components/ui";
 import { useAsync } from "../hooks";
 import type { Health, ResultsSummary } from "../types";
 
-export function OverviewPage({ projectId, navigate }: { projectId: string | null; navigate: (p: string) => void }) {
-  const health = useAsync<Health>(() => api.health(), [], 15000);
+type Fmt = (v: number) => string;
+
+interface Row {
+  hyp?: string;
+  label: string;
+  hint: string;
+  ai: number | null | undefined;
+  gc: number | null | undefined;
+  format: Fmt;
+  /** Which direction is better for this measure. */
+  better: "higher" | "lower";
+  diff: (ai: number, gc: number) => string;
+}
+
+export function OverviewPage({
+  projectId,
+  navigate,
+  health,
+}: {
+  projectId: string | null;
+  navigate: (p: string) => void;
+  health: Health | null;
+}) {
   const summary = useAsync<ResultsSummary>(() => api.resultsSummary(projectId ?? undefined), [projectId], 10000);
   const s = summary.data;
   const ai = s?.conditions.ai_only;
   const gc = s?.conditions.greencode;
+  const hasData = !!s && s.total_runs > 0;
+
+  const rows: Row[] = [
+    {
+      hyp: "H1",
+      label: "Correctness rate",
+      hint: "verified ÷ generated",
+      ai: ai?.correctness_rate,
+      gc: gc?.correctness_rate,
+      format: fmt.rate,
+      better: "higher",
+      diff: (a, g) => `${g - a >= 0 ? "+" : "−"}${Math.abs((g - a) * 100).toFixed(0)} pp`,
+    },
+    {
+      hyp: "H2",
+      label: "Geomean speed-up",
+      hint: "verified candidates only",
+      ai: ai?.geomean_speedup,
+      gc: gc?.geomean_speedup,
+      format: fmt.x,
+      better: "higher",
+      diff: (a, g) => `${g - a >= 0 ? "+" : "−"}${Math.abs(g - a).toFixed(2)}×`,
+    },
+    {
+      hyp: "H3",
+      label: "Geomean energy ratio",
+      hint: "original ÷ candidate energy",
+      ai: ai?.geomean_energy_ratio,
+      gc: gc?.geomean_energy_ratio,
+      format: fmt.x,
+      better: "higher",
+      diff: (a, g) => `${g - a >= 0 ? "+" : "−"}${Math.abs(g - a).toFixed(2)}×`,
+    },
+    {
+      label: "Significantly faster",
+      hint: "share of benchmarked candidates",
+      ai: ai && ai.benchmarked ? ai.faster_significant / ai.benchmarked : null,
+      gc: gc && gc.benchmarked ? gc.faster_significant / gc.benchmarked : null,
+      format: fmt.rate,
+      better: "higher",
+      diff: (a, g) => `${g - a >= 0 ? "+" : "−"}${Math.abs((g - a) * 100).toFixed(0)} pp`,
+    },
+    {
+      label: "Unchanged candidates",
+      hint: "model returned the code as it was",
+      ai: ai && ai.runs ? ai.unchanged / ai.runs : null,
+      gc: gc && gc.runs ? gc.unchanged / gc.runs : null,
+      format: fmt.rate,
+      better: "lower",
+      diff: (a, g) => `${g - a >= 0 ? "+" : "−"}${Math.abs((g - a) * 100).toFixed(0)} pp`,
+    },
+  ];
 
   return (
-    <div>
-      <h1>GreenCode</h1>
-      <div className="subtitle">Don't just optimise. Prove the impact. — Detect → Explain → Optimise → Test → Benchmark → Measure → Verify</div>
-      <ErrorBox error={health.error ?? summary.error} />
+    <div className="stack">
+      <PageHeader
+        title="Overview"
+        lede="Don't just optimise. Prove the impact. GreenCode finds inefficient Python and SQL, asks a local model to fix it, checks the result is correct, and measures what changed."
+        actions={
+          <>
+            <button onClick={() => navigate("/experiments")}>Run experiments</button>
+            <button className="primary" onClick={() => navigate("/analyse")}>
+              Analyse code
+            </button>
+          </>
+        }
+      />
 
-      <div className="grid four">
-        <Stat label="Pipeline runs" value={s?.total_runs ?? "–"} hint={projectId ? "in selected project" : "across all projects"} />
-        <Stat
-          label="Correctness · AI-only vs GreenCode"
-          value={`${fmt.rate(ai?.correctness_rate)} · ${fmt.rate(gc?.correctness_rate)}`}
-          hint="verified / generated (H1)"
-        />
-        <Stat
-          label="Geomean speed-up · AI-only vs GreenCode"
-          value={`${fmt.x(ai?.geomean_speedup)} · ${fmt.x(gc?.geomean_speedup)}`}
-          hint="verified candidates only (H2)"
-        />
-        <Stat
-          label="Geomean energy ratio · AI-only vs GreenCode"
-          value={`${fmt.x(ai?.geomean_energy_ratio)} · ${fmt.x(gc?.geomean_energy_ratio)}`}
-          hint="original ÷ candidate energy (H3)"
-        />
-      </div>
+      <ErrorBox error={summary.error} onRetry={() => void summary.reload()} />
+      <Readiness health={health} />
 
-      <div className="grid two" style={{ marginTop: 18 }}>
-        <div className="card">
-          <h3>Condition comparison</h3>
-          {s && s.total_runs > 0 ? (
-            <>
-              <ConditionBars
-                items={[
-                  { label: "Correctness rate", ai_only: ai?.correctness_rate ?? null, greencode: gc?.correctness_rate ?? null },
-                  { label: "Significantly faster", ai_only: ai && ai.benchmarked ? ai.faster_significant / ai.benchmarked : null, greencode: gc && gc.benchmarked ? gc.faster_significant / gc.benchmarked : null },
-                  { label: "Unchanged candidates", ai_only: ai && ai.runs ? ai.unchanged / ai.runs : null, greencode: gc && gc.runs ? gc.unchanged / gc.runs : null },
-                ]}
-                format={(v) => `${(v * 100).toFixed(0)}%`}
-                max={1}
-              />
-              <Legend items={[{ label: "AI-only", color: "ai_only" }, { label: "GreenCode (static-analysis guided)", color: "greencode" }]} />
-            </>
-          ) : (
-            <Empty>No experiment data yet. Run the benchmark suite from the Experiments page.</Empty>
-          )}
-        </div>
-        <div className="card">
-          <h3>System</h3>
-          {health.data ? (
-            <div className="checks">
-              <div>
-                <Badge kind={health.data.database ? "ok" : "bad"}>database</Badge> evidence store
+      {summary.loading && !s ? (
+        <LoadingBlock label="Loading results" rows={4} />
+      ) : !hasData ? (
+        <GettingStarted navigate={navigate} />
+      ) : (
+        <>
+          <Section
+            id="compare"
+            title="AI-only vs GreenCode"
+            hint={`${s.total_runs} pipeline runs ${projectId ? "in this project" : "across all projects"}`}
+          >
+            <div className="grid wide-left">
+              <div className="panel flush">
+                <div className="table-wrap" role="region" aria-label="Condition comparison" tabIndex={0}>
+                  <table className="compare-table">
+                    <thead>
+                      <tr>
+                        <th>Measure</th>
+                        <th className="num">AI-only</th>
+                        <th className="num">GreenCode</th>
+                        <th className="num">Difference</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((r) => {
+                        const both = r.ai != null && r.gc != null;
+                        const gcBetter = both && (r.better === "higher" ? r.gc! > r.ai! : r.gc! < r.ai!);
+                        const aiBetter = both && (r.better === "higher" ? r.ai! > r.gc! : r.ai! < r.gc!);
+                        return (
+                          <tr key={r.label}>
+                            <td>
+                              <div>
+                                {r.label} {r.hyp && <Badge>{r.hyp}</Badge>}
+                              </div>
+                              <div className="muted small">{r.hint}</div>
+                            </td>
+                            <td className={`num ${aiBetter ? "winner" : ""}`}>{r.ai == null ? "–" : r.format(r.ai)}</td>
+                            <td className={`num ${gcBetter ? "winner" : ""}`}>{r.gc == null ? "–" : r.format(r.gc)}</td>
+                            <td className="num muted">{both ? r.diff(r.ai!, r.gc!) : "–"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <div>
-                <Badge kind={health.data.llm.ok ? "ok" : "bad"}>{health.data.llm.provider}</Badge> {health.data.llm.model ?? health.data.settings.model}
-                {health.data.llm.ok && health.data.llm.model_available === false && <span className="muted"> (model not pulled)</span>}
-                {health.data.llm.error && <span className="muted"> {health.data.llm.error}</span>}
-              </div>
-              <div>
-                <Badge kind="info">energy</Badge> {health.data.energy.selected}
-                <span className="muted"> · RAPL {health.data.energy.rapl ? "available" : "n/a"} · CodeCarbon {health.data.energy.codecarbon ? "installed" : "n/a"}</span>
-              </div>
-              <div>
-                <Badge>benchmark</Badge> {health.data.settings.repetitions} reps · {health.data.settings.warmup} warm-up · region {health.data.settings.region}
+              <div className="stack-sm">
+                <ConditionBars
+                  title="Share of runs by outcome"
+                  items={[
+                    { label: "Correct", ai_only: ai?.correctness_rate ?? null, greencode: gc?.correctness_rate ?? null },
+                    { label: "Significantly faster", ai_only: rows[3].ai ?? null, greencode: rows[3].gc ?? null },
+                    { label: "Unchanged", ai_only: rows[4].ai ?? null, greencode: rows[4].gc ?? null },
+                  ]}
+                  format={(v) => `${(v * 100).toFixed(0)}%`}
+                  max={1}
+                />
+                <Legend items={[{ label: "AI-only", color: "ai_only" }, { label: "GreenCode (guided by static analysis)", color: "greencode" }]} />
               </div>
             </div>
-          ) : (
-            <Empty>API unreachable</Empty>
-          )}
-          <div className="row" style={{ marginTop: 16 }}>
-            <button className="primary" onClick={() => navigate("/analyse")}>Analyse code</button>
-            <button onClick={() => navigate("/experiments")}>Run experiments</button>
-            <button onClick={() => navigate("/rules")}>Rule catalogue</button>
-          </div>
-        </div>
-      </div>
+            <p className="muted small" style={{ marginTop: 10 }}>
+              Better values are highlighted. <Term id="geomean">Geomean</Term> is the geometric mean of per-case ratios. Energy values may be{" "}
+              <Term id="estimated">estimated</Term> rather than <Term id="measured">measured</Term>; each run records which.
+            </p>
+          </Section>
 
-      <div className="card">
-        <h3>Hypotheses</h3>
-        {s && s.total_runs > 0 ? (
-          <HypothesisList summary={s} />
-        ) : (
-          <Empty>Hypothesis tests appear once at least one case has been run under both conditions.</Empty>
-        )}
-      </div>
+          <Section id="hypotheses" title="Hypotheses" hint="α = 0.05">
+            <div className="panel">
+              <HypothesisList summary={s} />
+            </div>
+          </Section>
+        </>
+      )}
+
+      {health && (
+        <details className="disclosure">
+          <summary>System details</summary>
+          <div className="disclosure-body">
+            <dl className="dl">
+              <dt>Database</dt>
+              <dd>{health.database ? "connected" : "unreachable"}</dd>
+              <dt>Model</dt>
+              <dd>
+                {health.llm.provider} · {health.llm.model ?? health.settings.model}
+                {health.llm.error && <span className="muted"> ({health.llm.error})</span>}
+              </dd>
+              <dt>Energy source</dt>
+              <dd>
+                {health.energy.selected} · <Term id="rapl">RAPL</Term> {health.energy.rapl ? "available" : "not available"} · CodeCarbon {health.energy.codecarbon ? "installed" : "not installed"}
+              </dd>
+              <dt>Benchmark</dt>
+              <dd>
+                {health.settings.repetitions} repetitions, {health.settings.warmup} warm-up, carbon region {health.settings.region}
+              </dd>
+            </dl>
+          </div>
+        </details>
+      )}
     </div>
+  );
+}
+
+/** Tells the user what is not ready and exactly how to fix it. Renders nothing when everything is fine. */
+function Readiness({ health }: { health: Health | null }) {
+  if (!health) return null; // the API-offline error is already shown by ErrorBox
+  if (!health.database) {
+    return (
+      <Alert kind="error" title="The database is not reachable">
+        GreenCode stores all evidence in PostgreSQL. Check that the server is running and that <code>GREENCODE_DATABASE_URL</code> in <code>backend/.env</code> is correct.
+      </Alert>
+    );
+  }
+  if (health.llm.provider === "mock") {
+    return (
+      <Alert kind="warn" title="Using the mock model">
+        The mock provider returns your code unchanged, so results are not meaningful. Set <code>GREENCODE_LLM_PROVIDER=ollama</code> for real experiments.
+      </Alert>
+    );
+  }
+  if (!health.llm.ok) {
+    return (
+      <Alert kind="warn" title={`${health.llm.provider} is not running`}>
+        <div className="stack-sm">
+          <span>Optimisations need a local model. Start Ollama, then reload this page.</span>
+          <Command>ollama serve</Command>
+        </div>
+      </Alert>
+    );
+  }
+  if (health.llm.model_available === false) {
+    return (
+      <Alert kind="warn" title={`Model ${health.settings.model} is not downloaded`}>
+        <div className="stack-sm">
+          <span>Download it once (about 5 GB), then reload this page.</span>
+          <Command>{`ollama pull ${health.settings.model}`}</Command>
+        </div>
+      </Alert>
+    );
+  }
+  return null;
+}
+
+function GettingStarted({ navigate }: { navigate: (p: string) => void }) {
+  return (
+    <Section id="start" title="Get started" hint="No experiment data yet">
+      <div className="panel">
+        <ol className="numbered">
+          <li>
+            <div>
+              <strong>Try one piece of code.</strong>
+              <p className="muted">Paste a Python function or SQL query, see which inefficiency rules fire, then optimise it with and without the findings.</p>
+              <div style={{ marginTop: 8 }}>
+                <button className="primary" onClick={() => navigate("/analyse")}>
+                  Analyse code <Icon name="arrow-right" size={16} />
+                </button>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Run the whole benchmark suite.</strong>
+              <p className="muted">30 prepared cases run under both conditions. This is the data your hypotheses are tested on.</p>
+              <div style={{ marginTop: 8 }}>
+                <button onClick={() => navigate("/experiments")}>Open experiments</button>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <strong>Read the evidence.</strong>
+              <p className="muted">This page then compares AI-only and GreenCode and reports whether H1 to H4 are supported so far.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </Section>
   );
 }
 
@@ -118,23 +301,24 @@ export function HypothesisList({ summary }: { summary: ResultsSummary }) {
       case "H3":
         return `${d.paired_cases} paired cases · geomean energy ratio ${fmt.x(d.ai_only_geomean as number)} vs ${fmt.x(d.greencode_geomean as number)} · Wilcoxon ${fmt.p(d.wilcoxon_p as number)}`;
       case "H4":
-        return `${d.cases} cases · median |Δtime − Δenergy| ${fmt.num(d.median_divergence_pp as number, 1)} pp · ${d.cases_diverging_over_10pp ?? 0} diverge >10 pp · Spearman ρ ${fmt.num(d.spearman_rho as number)} (${fmt.p(d.spearman_p as number)})`;
+        return `${d.cases} cases · median |Δtime − Δenergy| ${fmt.num(d.median_divergence_pp as number, 1)} pp · ${d.cases_diverging_over_10pp ?? 0} diverge by more than 10 pp · Spearman ρ ${fmt.num(d.spearman_rho as number)} (${fmt.p(d.spearman_p as number)})`;
     }
   };
   return (
-    <div>
+    <div className="divided">
       {(["H1", "H2", "H3", "H4"] as const).map((id) => (
         <div className="hyp" key={id}>
-          <div className="id">{id}</div>
+          <div className="hyp-id">{id}</div>
           <div>
-            <div>{HYP_TEXT[id]}</div>
-            <div className="muted small">{detail(id)}</div>
+            <div className="hyp-text">{HYP_TEXT[id]}</div>
+            <div className="hyp-stats">{detail(id)}</div>
           </div>
-          <Badge kind={h[id].supported ? "ok" : "warn"}>{h[id].supported ? "supported so far" : "not supported yet"}</Badge>
+          <Badge kind={h[id].supported ? "ok" : "warn"}>{h[id].supported ? "Supported so far" : "Not supported yet"}</Badge>
         </div>
       ))}
-      <div className="muted small" style={{ marginTop: 8 }}>
-        Tests use α = 0.05. H2/H3 use a one-sided paired Wilcoxon on log ratios (requires ≥ 5 paired cases); H1 uses a one-sided Fisher exact test.
+      <div className="muted small" style={{ paddingTop: 12 }}>
+        H2 and H3 use a one-sided paired <Term id="wilcoxon">Wilcoxon</Term> test on log ratios (needs at least 5 paired cases). H1 uses a one-sided{" "}
+        <Term id="fisher">Fisher exact</Term> test.
       </div>
     </div>
   );

@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactElement } from "react";
 
 import { api } from "./api";
-import { useHashRoute, useLocalStorage } from "./hooks";
+import { Icon, type IconName } from "./components/icons";
+import { useDocumentTitle, useHashRoute, useLocalStorage, useTheme } from "./hooks";
 import { AnalysePage, AnalysisDetailPage } from "./pages/AnalysePage";
 import { ExperimentsPage } from "./pages/ExperimentsPage";
 import { OptimisationPage } from "./pages/OptimisationPage";
@@ -10,19 +11,30 @@ import { ProjectsPage } from "./pages/ProjectsPage";
 import { RulesPage } from "./pages/RulesPage";
 import type { Health, Project } from "./types";
 
-const NAV: { path: string; label: string }[] = [
-  { path: "/overview", label: "Overview" },
-  { path: "/projects", label: "Projects" },
-  { path: "/analyse", label: "Analyse" },
-  { path: "/experiments", label: "Experiments" },
-  { path: "/rules", label: "Rules & assumptions" },
+const NAV: { path: string; label: string; icon: IconName; matches: string[] }[] = [
+  { path: "/overview", label: "Overview", icon: "squares-four", matches: ["overview", ""] },
+  { path: "/projects", label: "Projects", icon: "folders", matches: ["projects"] },
+  { path: "/analyse", label: "Analyse", icon: "magnifying-glass", matches: ["analyse", "analyses", "optimisations"] },
+  { path: "/experiments", label: "Experiments", icon: "flask", matches: ["experiments"] },
+  { path: "/rules", label: "Rules & assumptions", icon: "list-checks", matches: ["rules"] },
 ];
+
+const TITLES: Record<string, string> = {
+  overview: "Overview",
+  projects: "Projects",
+  analyse: "Analyse",
+  analyses: "Analysis",
+  optimisations: "Optimisation",
+  experiments: "Experiments",
+  rules: "Rules & assumptions",
+};
 
 export default function App() {
   const { parts, navigate } = useHashRoute();
   const [projectId, setProjectId] = useLocalStorage("greencode.project", "");
   const [projects, setProjects] = useState<Project[]>([]);
   const [health, setHealth] = useState<Health | null>(null);
+  const { effective, toggle } = useTheme();
 
   useEffect(() => {
     const load = () => {
@@ -40,6 +52,7 @@ export default function App() {
 
   const section = parts[0] ?? "overview";
   const pid = projectId || null;
+  useDocumentTitle(TITLES[section] ?? "Overview");
 
   let page: ReactElement;
   switch (section) {
@@ -62,28 +75,40 @@ export default function App() {
       page = <RulesPage />;
       break;
     default:
-      page = <OverviewPage projectId={pid} navigate={navigate} />;
+      page = <OverviewPage projectId={pid} navigate={navigate} health={health} />;
   }
+
+  const dbOk = !!health?.database;
+  const modelOk = !!health?.llm.ok && health.llm.model_available !== false;
+  const energy = health?.energy.selected ?? null;
 
   return (
     <div className="app">
+      <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}>
+        Skip to content
+      </a>
       <aside className="sidebar">
-        <div className="brand">
-          <span className="leaf" /> GreenCode
-        </div>
-        <div className="tagline">Static-analysis-guided AI optimisation for sustainable Python & SQL</div>
-        <nav className="nav">
+        <a className="brand" href="#/overview" aria-label="GreenCode, go to overview">
+          <span className="brand-mark">
+            <Icon name="leaf" size={17} />
+          </span>
+          GreenCode
+        </a>
+
+        <nav className="nav" aria-label="Main">
           {NAV.map((n) => (
-            <button key={n.path} className={`#/${section}`.startsWith(`#${n.path}`) ? "active" : ""} onClick={() => navigate(n.path)}>
+            <a key={n.path} href={`#${n.path}`} aria-current={n.matches.includes(section) ? "page" : undefined}>
+              <Icon name={n.icon} />
               {n.label}
-            </button>
+            </a>
           ))}
         </nav>
-        <div style={{ marginTop: 14 }}>
-          <label className="field" style={{ color: "#8ea392" }}>
+
+        <div className="sidebar-section">
+          <label className="field">
             Project
-            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ width: "100%" }}>
-              {projects.length === 0 && <option value="">(none)</option>}
+            <select value={projectId} onChange={(e) => setProjectId(e.target.value)} disabled={projects.length === 0}>
+              {projects.length === 0 && <option value="">No projects yet</option>}
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -92,22 +117,31 @@ export default function App() {
             </select>
           </label>
         </div>
-        <div className="status">
-          <div>
-            <span className={`dot ${health?.database ? "ok" : "bad"}`} />
-            API {health ? (health.database ? "connected" : "degraded") : "offline"}
-          </div>
-          <div>
-            <span className={`dot ${health?.llm.ok ? "ok" : "bad"}`} />
-            {health ? `${health.llm.provider} · ${health.settings.model}` : "model unknown"}
-          </div>
-          <div>
-            <span className="dot ok" />
-            energy: {health?.energy.selected ?? "–"}
-          </div>
+
+        <div className="sidebar-footer">
+          <ul className="status-list" aria-label="System status">
+            <li>
+              <Icon name={dbOk ? "check-circle" : "x-circle"} size={15} className={`status-icon ${dbOk ? "ok" : "bad"}`} />
+              <span>{health ? (dbOk ? "Database connected" : "Database unreachable") : "API offline"}</span>
+            </li>
+            <li>
+              <Icon name={modelOk ? "check-circle" : "warning"} size={15} className={`status-icon ${modelOk ? "ok" : "warn"}`} />
+              <span>{health ? (modelOk ? `${health.settings.model}` : health.llm.ok ? `${health.settings.model} not pulled` : `${health.llm.provider} not running`) : "Model unknown"}</span>
+            </li>
+            <li>
+              <Icon name="info" size={15} className="status-icon" />
+              <span>Energy: {energy ?? "unknown"}</span>
+            </li>
+          </ul>
+          <button className="small quiet" onClick={toggle} aria-label={`Switch to ${effective === "dark" ? "light" : "dark"} theme`}>
+            <Icon name={effective === "dark" ? "sun" : "moon"} size={16} />
+            {effective === "dark" ? "Light theme" : "Dark theme"}
+          </button>
         </div>
       </aside>
-      <main className="main">{page}</main>
+      <main className="main" id="main" tabIndex={-1} style={{ outline: "none" }}>
+        {page}
+      </main>
     </div>
   );
 }

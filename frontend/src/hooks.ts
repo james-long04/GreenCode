@@ -69,3 +69,39 @@ export function useLocalStorage(key: string, initial: string) {
   );
   return [value, set] as const;
 }
+
+export type Theme = "system" | "light" | "dark";
+
+/** Theme preference: follows the OS by default; an explicit choice is stored and applied via data-theme. */
+export function useTheme() {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    try {
+      const t = window.localStorage.getItem("greencode.theme");
+      return t === "light" || t === "dark" ? t : "system";
+    } catch {
+      return "system";
+    }
+  });
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "system") root.removeAttribute("data-theme");
+    else root.setAttribute("data-theme", theme);
+    try {
+      if (theme === "system") window.localStorage.removeItem("greencode.theme");
+      else window.localStorage.setItem("greencode.theme", theme);
+    } catch {
+      /* ignore */
+    }
+  }, [theme]);
+  const prefersDark = typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+  const effective: "light" | "dark" = theme === "system" ? (prefersDark ? "dark" : "light") : theme;
+  const toggle = useCallback(() => setThemeState(effective === "dark" ? "light" : "dark"), [effective]);
+  return { theme, effective, toggle };
+}
+
+/** Keeps the browser tab title in step with the current page (also read out by screen readers on navigation). */
+export function useDocumentTitle(title: string) {
+  useEffect(() => {
+    document.title = title ? `${title} · GreenCode` : "GreenCode";
+  }, [title]);
+}

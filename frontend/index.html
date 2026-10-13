@@ -3,7 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="GreenCode: static-analysis-guided AI optimisation for sustainable Python and SQL. Don't just optimise. Prove the impact." />
     <title>GreenCode</title>
+    <link rel="preload" href="/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      // Apply the saved theme before first paint so there is no light/dark flash.
+      try {
+        var t = localStorage.getItem("greencode.theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>
