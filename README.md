@@ -239,6 +239,7 @@ every benchmark run for reproducibility.
 
 * `docs/methodology.md` – experimental protocol, statistics and threats to validity
 * `docs/architecture.md` – component responsibilities and data model
+* `docs/design-skills.md` – the design skills in `.claude/skills/` used for the dashboard UI
 * API reference: `http://localhost:8000/docs`
 
 ## Acknowledgement of AI assistance
@@ -246,3 +247,8 @@ every benchmark run for reproducibility.
 The codebase was generated with Claude (Anthropic) under the author's direction
 from the project proposal, and is declared as such in line with TU Dublin's
 policy on AI use. Commit messages carry a co-author line for every AI-generated change.
+
+Dashboard design work is additionally guided by third-party Claude skills (Impeccable,
+Taste skill, Emil Kowalski's design skills and a Nielsen heuristics audit) stored in
+`.claude/skills/` with their licences; see `docs/design-skills.md`. `CLAUDE.md` tells Claude Code
+how to use them in this repo.
