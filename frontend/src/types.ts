@@ -295,7 +295,7 @@ export interface AdminOverview {
     pid: number;
     cwd: string;
   };
-  admin_token_set: boolean;
+  admin_token_generated: boolean;
 }
 
 export interface AdminSettings {

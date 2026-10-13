@@ -61,8 +61,8 @@ class Settings(BaseSettings):
     # --- api -------------------------------------------------------------
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
     benchmark_suite_dir: str = "../benchmarks"
-    # Optional shared secret for /api/admin/*. Unset means the admin API is open,
-    # which is fine on localhost and not fine on a public host.
+    # Shared secret for /api/admin/*. Always required: when unset, a random token
+    # is generated at startup and printed in the server log (see app.main).
     admin_token: str | None = None
 
 
@@ -112,6 +112,26 @@ def set_runtime_overrides(values: dict[str, object]) -> Settings:
 def clear_runtime_overrides() -> Settings:
     _overrides.clear()
     return get_settings()
+
+
+_generated_token: str | None = None
+
+
+def effective_admin_token() -> str:
+    """The admin token in force: the configured one, or a per-process random one."""
+    global _generated_token
+    configured = get_settings().admin_token
+    if configured:
+        return configured
+    if _generated_token is None:
+        import secrets
+
+        _generated_token = secrets.token_urlsafe(24)
+    return _generated_token
+
+
+def admin_token_is_generated() -> bool:
+    return not get_settings().admin_token
 
 
 # Scripts that change os.environ call get_settings.cache_clear(); keep that working.

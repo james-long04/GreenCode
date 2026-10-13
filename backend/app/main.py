@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.admin import router as admin_router
 from app.api.routes import router
-from app.config import get_settings
+from app.config import admin_token_is_generated, effective_admin_token, get_settings
 from app.db.session import init_db
 from app.logbuffer import install as install_log_buffer
 
@@ -30,6 +30,12 @@ async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
         log.info("database ready (%s)", settings.database_url.split("@")[-1])
     except Exception as err:  # noqa: BLE001
         log.error("database initialisation failed: %s", err)
+    token = effective_admin_token()
+    if admin_token_is_generated():
+        log.warning("GREENCODE_ADMIN_TOKEN is not set. Admin token for this run: %s "
+                    "(paste it into the dashboard's Admin page; set the variable to make it permanent)", token)
+    else:
+        log.info("admin API protected by GREENCODE_ADMIN_TOKEN")
     yield
 
 

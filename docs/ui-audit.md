@@ -42,5 +42,5 @@ Built with the same skills. Decisions worth recording:
 | Error prevention | Apply is disabled until something changed; numbers use number inputs; backend refuses to edit or delete a carbon factor that evidence references (409) and the UI explains why. |
 | Consistency | Same panel, table, badge and alert components as the rest of the dashboard; sub-navigation reuses the quiet link style. |
 | Minimalism | Fixed settings are behind a disclosure; only runtime-adjustable keys are in the form. |
-| Help | The token form says exactly which variable it matches; the open-API notice appears only when no token is set. |
-| Security | Token lives in localStorage of that browser only and is sent solely to `/api/admin/*`. |
+| Help | The token form says exactly which variable it matches and where a generated token is printed; a notice flags when the token is temporary. |
+| Security | The admin API is never open: a token is always required (configured or generated per process). It lives in localStorage of that browser only, is sent solely to `/api/admin/*`, and a Lock button clears it. |

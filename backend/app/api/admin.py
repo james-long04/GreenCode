@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import platform
+import secrets
 import sys
 import threading
 from datetime import datetime, timedelta, timezone
@@ -29,8 +30,8 @@ from sqlalchemy.orm import Session
 from app import schemas
 from app.ai.provider import build_provider
 from app.benchmark.energy import codecarbon_available, rapl_available, select_method
-from app.config import (RUNTIME_ADJUSTABLE, clear_runtime_overrides, get_settings, runtime_overrides,
-                        set_runtime_overrides)
+from app.config import (RUNTIME_ADJUSTABLE, admin_token_is_generated, clear_runtime_overrides, effective_admin_token,
+                        get_settings, runtime_overrides, set_runtime_overrides)
 from app.db.models import Analysis, BenchmarkRun, CarbonFactor, Finding, Measurement, Optimisation, Project
 from app.db.session import get_db
 from app.experiments import results as results_mod
@@ -44,8 +45,8 @@ _URL_KEYS = {"database_url", "benchmark_database_url"}
 
 
 def require_admin(x_admin_token: str | None = Header(default=None)) -> None:
-    token = get_settings().admin_token
-    if token and x_admin_token != token:
+    """Every admin route needs the token. There is no open mode."""
+    if not x_admin_token or not secrets.compare_digest(x_admin_token, effective_admin_token()):
         raise HTTPException(401, "admin token required")
 
 
@@ -104,7 +105,7 @@ def overview(db: Session = Depends(get_db)) -> dict[str, Any]:
                  "memory_total_gb": round(vm.total / 1e9, 2), "memory_used_percent": vm.percent,
                  "cpu_percent": psutil.cpu_percent(interval=None), "pid": os.getpid(),
                  "cwd": os.getcwd()},
-        "admin_token_set": bool(settings.admin_token),
+        "admin_token_generated": admin_token_is_generated(),
     }
 
 

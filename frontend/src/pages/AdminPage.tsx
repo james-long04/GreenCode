@@ -45,8 +45,8 @@ export function AdminPage({ projectId }: { projectId: string | null }) {
   if (unauthorised(overview.error)) {
     return (
       <div className="stack">
-        <PageHeader title="Admin" lede="This server requires an admin token." />
-        <TokenForm onSaved={() => setTokenVersion((v) => v + 1)} />
+        <PageHeader title="Admin" lede="Operating the server needs the admin token." />
+        <TokenForm onSaved={() => setTokenVersion((v) => v + 1)} wrong={!!adminToken.get()} />
       </div>
     );
   }
@@ -65,6 +65,9 @@ export function AdminPage({ projectId }: { projectId: string | null }) {
             <button className="quiet" onClick={() => void overview.reload()} aria-label="Refresh admin data">
               <Icon name="arrow-clockwise" />
               Refresh
+            </button>
+            <button className="quiet" onClick={() => { adminToken.set(""); setTokenVersion((v) => v + 1); }}>
+              Lock
             </button>
           </>
         }
@@ -95,21 +98,24 @@ export function AdminPage({ projectId }: { projectId: string | null }) {
 
 // --- token ------------------------------------------------------------------
 
-function TokenForm({ onSaved }: { onSaved: () => void }) {
-  const [value, setValue] = useState(adminToken.get());
+function TokenForm({ onSaved, wrong }: { onSaved: () => void; wrong: boolean }) {
+  const [value, setValue] = useState("");
   return (
     <form
       className="panel stack-sm"
-      style={{ maxWidth: 480 }}
+      style={{ maxWidth: 520 }}
       onSubmit={(e) => {
         e.preventDefault();
         adminToken.set(value.trim());
         onSaved();
       }}
     >
+      {wrong && <Alert kind="error">That token was not accepted. If the server restarted without GREENCODE_ADMIN_TOKEN set, it printed a new one.</Alert>}
       <label className="field">
         Admin token
-        <span className="help">The value of GREENCODE_ADMIN_TOKEN on the server. Stored in this browser only.</span>
+        <span className="help">
+          The value of <code>GREENCODE_ADMIN_TOKEN</code> in the backend environment. If it is not set, the backend prints a random token in its terminal at startup. Stored in this browser only.
+        </span>
         <input type="password" value={value} onChange={(e) => setValue(e.target.value)} autoComplete="off" required />
       </label>
       <div>
@@ -141,9 +147,9 @@ function SystemSection({ data }: { data: AdminOverview | null }) {
   return (
     <Section title="System" id="system">
       <div className="stack-sm">
-        {!data.admin_token_set && (
-          <Alert kind="info" title="The admin API is open">
-            Anyone who can reach this server can use this page. Set <code>GREENCODE_ADMIN_TOKEN</code> in the backend environment before exposing it beyond localhost.
+        {data.admin_token_generated && (
+          <Alert kind="info" title="Using a temporary admin token">
+            The backend generated this token because <code>GREENCODE_ADMIN_TOKEN</code> is not set. It changes on every restart; set the variable in <code>backend/.env</code> to keep one.
           </Alert>
         )}
         {store.stuck_optimisations > 0 && (

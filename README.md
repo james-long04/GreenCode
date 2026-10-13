@@ -232,8 +232,9 @@ the environment, and every run records the values it used), Ollama model listing
 and pulls, carbon-factor management (values that evidence already references are
 locked), maintenance (mark stuck runs failed, delete orphan analyses or
 failed/rejected runs; benchmarked evidence is never deleted) and a CSV export of
-all results. Set `GREENCODE_ADMIN_TOKEN` to require an `X-Admin-Token` header;
-unset, the admin API is open, which is only acceptable on localhost.
+all results. The admin API always requires an `X-Admin-Token` header. Set
+`GREENCODE_ADMIN_TOKEN` to choose it; if unset, the backend generates a random
+token at every startup and prints it in its log, so the API is never open.
 
 ## Measurement caveats (for the dissertation)
 
