@@ -9,7 +9,7 @@ $pdfs = @{
   "connollybree2025impact" = "https://researchrepository.ucd.ie/server/api/core/bitstreams/0102f552-ecc3-4d24-a9f8-6d6a8106e369/content"
   "ferreira2018javascript" = "https://arrow.tudublin.ie/cgi/viewcontent.cgi?article=1142&context=scschcomdis"
   "yadav2026idea" = "https://arrow.tudublin.ie/cgi/viewcontent.cgi?article=1000&context=cenresro"
-  "lannelongue2021green" = "https://onlinelibrary.wiley.com/doi/pdf/10.1002/advs.202100707"
+  "lannelongue2021green" = "https://arxiv.org/pdf/2007.07610"
   "chen2021codex" = "https://arxiv.org/pdf/2107.03374"
   "huang2024effibench" = "https://arxiv.org/pdf/2402.02037"
   "du2024mercury" = "https://arxiv.org/pdf/2402.07844"
@@ -22,11 +22,12 @@ $pdfs = @{
   "peng2024llms" = "https://arxiv.org/pdf/2410.09241"
   "romerorosas2024should" = "https://arxiv.org/pdf/2406.12146"
   "li2024llmr2" = "https://arxiv.org/pdf/2404.12872"
-  "georges2007statistically" = "https://users.elis.ugent.be/~leeckhou/papers/oopsla07-georges.pdf"
+  "georges2007statistically" = "https://dri.es/files/oopsla07-georges.pdf"
 }
 $ok = 0; $failed = @()
 foreach ($key in $pdfs.Keys) {
   $out = Join-Path $dir "$key.pdf"
+  if ((Test-Path $out) -and ((Get-Item $out).Length -gt 10kb)) { Write-Host ("skip    {0} (already downloaded)" -f $key); $ok++; continue }
   try {
     Invoke-WebRequest -Uri $pdfs[$key] -OutFile $out -UserAgent "Mozilla/5.0" -MaximumRedirection 10 -TimeoutSec 120
     $head = [System.IO.File]::ReadAllBytes($out)[0..3]
@@ -41,4 +42,8 @@ foreach ($key in $pdfs.Keys) {
 Write-Host ""
 Write-Host ("Downloaded {0} of {1} open-access PDFs." -f $ok, $pdfs.Count)
 if ($failed) { Write-Host ("Could not fetch: {0}" -f ($failed -join ", ")) }
+Write-Host ""
+Write-Host "TU Dublin Arrow blocks scripted downloads. Open these in your browser and save into the pdfs folder with these exact names:"
+Write-Host "  ferreira2018javascript.pdf  <-  https://arrow.tudublin.ie/cgi/viewcontent.cgi?article=1142&context=scschcomdis"
+Write-Host "  yadav2026idea.pdf           <-  https://arrow.tudublin.ie/cgi/viewcontent.cgi?article=1000&context=cenresro"
 Write-Host "Not open access (use the DOI through the TU Dublin library): pinto2017energy, lee2024survey, pereira2021ranking, khan2018rapl, abtahi2025augmenting, mytkowicz2009producing, gsf2024sci (web page)."
