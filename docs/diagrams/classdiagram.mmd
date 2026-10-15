@@ -1,0 +1,140 @@
+classDiagram
+    direction LR
+
+    %% ---------- Evidence store (SQLAlchemy models) ----------
+    class Project {
+        +str id
+        +str name
+        +str description
+        +datetime created_at
+    }
+    class Analysis {
+        +str id
+        +str name
+        +str language
+        +str source
+        +dict case_spec
+        +str case_id
+        +str status
+        +float duration_ms
+    }
+    class Finding {
+        +str id
+        +str rule_id
+        +str title
+        +str severity
+        +int line
+        +str explanation
+        +str suggestion
+        +float confidence
+    }
+    class Optimisation {
+        +str id
+        +str condition
+        +str original_source
+        +str candidate_source
+        +str model_name
+        +str prompt
+        +str status
+        +str failure_reason
+        +dict summary
+    }
+    class TestResult {
+        +str id
+        +str test_name
+        +bool passed
+        +str failure_type
+    }
+    class BenchmarkRun {
+        +str id
+        +str variant
+        +int repetitions
+        +float median_ms
+        +float ci95_low_ms
+        +float ci95_high_ms
+        +list samples_ms
+        +dict environment
+    }
+    class Measurement {
+        +str id
+        +str metric
+        +float value
+        +str unit
+        +str method
+        +str source
+    }
+    class CarbonFactor {
+        +str id
+        +str region
+        +int year
+        +float grams_co2e_per_kwh
+        +str source
+        +bool is_default
+    }
+
+    Project "1" --> "*" Analysis : contains
+    Analysis "1" --> "*" Finding : produces
+    Analysis "1" --> "*" Optimisation : optimised under
+    Optimisation "1" --> "*" TestResult : verified by
+    Optimisation "1" --> "2" BenchmarkRun : original + candidate
+    BenchmarkRun "1" --> "*" Measurement : records
+    Measurement "*" --> "0..1" CarbonFactor : converted with
+
+    %% ---------- Pipeline services ----------
+    class AnalysisEngine {
+        +analyse(language, source) AnalysisResult
+        +all_rules() list~RuleInfo~
+    }
+    class LLMProvider {
+        <<abstract>>
+        +model_name() str
+        +generate(prompt, system) GenerationResult
+        +health() dict
+    }
+    class OllamaProvider {
+        +base_url
+        +model
+        +temperature
+        +seed
+    }
+    class MockProvider {
+        +responses
+    }
+    class Pipeline {
+        +create_analysis()
+        +create_optimisation()
+        +generate_candidate()
+        +verify_candidate()
+        +benchmark_pair()
+        +process_optimisation()
+    }
+    class Sandbox {
+        +run(code, timeout, memory_limit) SandboxResult
+    }
+    class BenchmarkRunner {
+        +warmup_runs
+        +repetitions
+        +run(variant) BenchmarkOutcome
+    }
+    class EnergyMeter {
+        <<interface>>
+        +start()
+        +stop() EnergySample
+    }
+    class RaplMeter
+    class CodeCarbonMeter
+    class CoefficientEstimate
+
+    LLMProvider <|-- OllamaProvider
+    LLMProvider <|-- MockProvider
+    EnergyMeter <|.. RaplMeter
+    EnergyMeter <|.. CodeCarbonMeter
+    EnergyMeter <|.. CoefficientEstimate
+
+    Pipeline --> AnalysisEngine : uses
+    Pipeline --> LLMProvider : uses
+    Pipeline --> Sandbox : verifies with
+    Pipeline --> BenchmarkRunner : benchmarks with
+    BenchmarkRunner --> EnergyMeter : measures with
+    Pipeline ..> Optimisation : writes
+    AnalysisEngine ..> Finding : creates
