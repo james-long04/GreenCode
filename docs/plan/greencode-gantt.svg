@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="672" viewBox="0 0 1440 672" font-family="Arial, Helvetica, sans-serif" font-size="12">
+<rect width="1440" height="672" fill="#fff"/>
+<text x="20" y="32" font-size="18" font-weight="700" fill="#111827">GreenCode project plan, September 2026 to April 2027</text>
+<text x="20" y="52" fill="#6b7280">Week 1 begins 14 September 2026. Current position: week 5. Bars are coloured by phase.</text>
+<rect x="820" y="90" width="150" height="472" fill="#f3f4f6"/>
+<line x1="400.0" y1="90" x2="400.0" y2="562" stroke="#d1d5db"/>
+<text x="404.0" y="102" font-size="11" font-weight="700" fill="#374151">Sep 2026</text>
+<line x1="490.0" y1="90" x2="490.0" y2="562" stroke="#d1d5db"/>
+<text x="494.0" y="102" font-size="11" font-weight="700" fill="#374151">Oct 2026</text>
+<line x1="610.0" y1="90" x2="610.0" y2="562" stroke="#d1d5db"/>
+<text x="614.0" y="102" font-size="11" font-weight="700" fill="#374151">Nov 2026</text>
+<line x1="760.0" y1="90" x2="760.0" y2="562" stroke="#d1d5db"/>
+<text x="764.0" y="102" font-size="11" font-weight="700" fill="#374151">Dec 2026</text>
+<line x1="880.0" y1="90" x2="880.0" y2="562" stroke="#d1d5db"/>
+<text x="884.0" y="102" font-size="11" font-weight="700" fill="#374151">Jan 2027</text>
+<line x1="1000.0" y1="90" x2="1000.0" y2="562" stroke="#d1d5db"/>
+<text x="1004.0" y="102" font-size="11" font-weight="700" fill="#374151">Feb 2027</text>
+<line x1="1120.0" y1="90" x2="1120.0" y2="562" stroke="#d1d5db"/>
+<text x="1124.0" y="102" font-size="11" font-weight="700" fill="#374151">Mar 2027</text>
+<line x1="1270.0" y1="90" x2="1270.0" y2="562" stroke="#d1d5db"/>
+<text x="1274.0" y="102" font-size="11" font-weight="700" fill="#374151">Apr 2027</text>
+<text x="415.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">1</text>
+<line x1="400" y1="120" x2="400" y2="562" stroke="#f3f4f6"/>
+<text x="445.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">2</text>
+<line x1="430" y1="120" x2="430" y2="562" stroke="#f3f4f6"/>
+<text x="475.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">3</text>
+<line x1="460" y1="120" x2="460" y2="562" stroke="#f3f4f6"/>
+<text x="505.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">4</text>
+<line x1="490" y1="120" x2="490" y2="562" stroke="#f3f4f6"/>
+<text x="535.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">5</text>
+<line x1="520" y1="120" x2="520" y2="562" stroke="#f3f4f6"/>
+<text x="565.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">6</text>
+<line x1="550" y1="120" x2="550" y2="562" stroke="#f3f4f6"/>
+<text x="595.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">7</text>
+<line x1="580" y1="120" x2="580" y2="562" stroke="#f3f4f6"/>
+<text x="625.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">8</text>
+<line x1="610" y1="120" x2="610" y2="562" stroke="#f3f4f6"/>
+<text x="655.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">9</text>
+<line x1="640" y1="120" x2="640" y2="562" stroke="#f3f4f6"/>
+<text x="685.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">10</text>
+<line x1="670" y1="120" x2="670" y2="562" stroke="#f3f4f6"/>
+<text x="715.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">11</text>
+<line x1="700" y1="120" x2="700" y2="562" stroke="#f3f4f6"/>
+<text x="745.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">12</text>
+<line x1="730" y1="120" x2="730" y2="562" stroke="#f3f4f6"/>
+<text x="775.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">13</text>
+<line x1="760" y1="120" x2="760" y2="562" stroke="#f3f4f6"/>
+<text x="805.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">14</text>
+<line x1="790" y1="120" x2="790" y2="562" stroke="#f3f4f6"/>
+<text x="835.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">15</text>
+<line x1="820" y1="120" x2="820" y2="562" stroke="#f3f4f6"/>
+<text x="865.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">16</text>
+<line x1="850" y1="120" x2="850" y2="562" stroke="#f3f4f6"/>
+<text x="895.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">17</text>
+<line x1="880" y1="120" x2="880" y2="562" stroke="#f3f4f6"/>
+<text x="925.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">18</text>
+<line x1="910" y1="120" x2="910" y2="562" stroke="#f3f4f6"/>
+<text x="955.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">19</text>
+<line x1="940" y1="120" x2="940" y2="562" stroke="#f3f4f6"/>
+<text x="985.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">20</text>
+<line x1="970" y1="120" x2="970" y2="562" stroke="#f3f4f6"/>
+<text x="1015.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">21</text>
+<line x1="1000" y1="120" x2="1000" y2="562" stroke="#f3f4f6"/>
+<text x="1045.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">22</text>
+<line x1="1030" y1="120" x2="1030" y2="562" stroke="#f3f4f6"/>
+<text x="1075.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">23</text>
+<line x1="1060" y1="120" x2="1060" y2="562" stroke="#f3f4f6"/>
+<text x="1105.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">24</text>
+<line x1="1090" y1="120" x2="1090" y2="562" stroke="#f3f4f6"/>
+<text x="1135.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">25</text>
+<line x1="1120" y1="120" x2="1120" y2="562" stroke="#f3f4f6"/>
+<text x="1165.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">26</text>
+<line x1="1150" y1="120" x2="1150" y2="562" stroke="#f3f4f6"/>
+<text x="1195.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">27</text>
+<line x1="1180" y1="120" x2="1180" y2="562" stroke="#f3f4f6"/>
+<text x="1225.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">28</text>
+<line x1="1210" y1="120" x2="1210" y2="562" stroke="#f3f4f6"/>
+<text x="1255.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">29</text>
+<line x1="1240" y1="120" x2="1240" y2="562" stroke="#f3f4f6"/>
+<text x="1285.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">30</text>
+<line x1="1270" y1="120" x2="1270" y2="562" stroke="#f3f4f6"/>
+<text x="1315.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">31</text>
+<line x1="1300" y1="120" x2="1300" y2="562" stroke="#f3f4f6"/>
+<text x="1345.0" y="116" text-anchor="middle" font-size="9" fill="#9ca3af">32</text>
+<line x1="1330" y1="120" x2="1330" y2="562" stroke="#f3f4f6"/>
+<text x="20" y="116" font-size="11" font-weight="700" fill="#374151">Task</text>
+<text x="386" y="116" text-anchor="end" font-size="11" font-weight="700" fill="#374151">Weeks</text>
+<line x1="20" y1="146" x2="1370" y2="146" stroke="#e5e7eb"/>
+<text x="20" y="137" fill="#111827">1.  Literature review and reference library</text>
+<text x="386" y="137" text-anchor="end" fill="#6b7280" font-size="11">1–8</text>
+<rect x="401" y="126" width="238" height="14" rx="3" fill="#2E7D5B"/>
+<line x1="20" y1="172" x2="1370" y2="172" stroke="#e5e7eb"/>
+<text x="20" y="163" fill="#111827">2.  Project proposal: research question, hypotheses, approach</text>
+<text x="386" y="163" text-anchor="end" fill="#6b7280" font-size="11">3–6</text>
+<rect x="461" y="152" width="118" height="14" rx="3" fill="#2E7D5B"/>
+<line x1="20" y1="198" x2="1370" y2="198" stroke="#e5e7eb"/>
+<text x="20" y="189" fill="#111827">3.  Requirements gathering and user-group feedback</text>
+<text x="386" y="189" text-anchor="end" fill="#6b7280" font-size="11">4–7</text>
+<rect x="491" y="178" width="118" height="14" rx="3" fill="#3C8F6A"/>
+<line x1="20" y1="224" x2="1370" y2="224" stroke="#e5e7eb"/>
+<text x="20" y="215" fill="#111827">4.  Architecture, database schema, UML diagrams</text>
+<text x="386" y="215" text-anchor="end" fill="#6b7280" font-size="11">5–8</text>
+<rect x="521" y="204" width="118" height="14" rx="3" fill="#4C9F79"/>
+<line x1="20" y1="250" x2="1370" y2="250" stroke="#e5e7eb"/>
+<text x="20" y="241" fill="#111827">5.  Core pipeline: analysis, AI, verification, benchmark</text>
+<text x="386" y="241" text-anchor="end" fill="#6b7280" font-size="11">6–10</text>
+<rect x="551" y="230" width="148" height="14" rx="3" fill="#1F6B4A"/>
+<line x1="20" y1="276" x2="1370" y2="276" stroke="#e5e7eb"/>
+<text x="20" y="267" fill="#111827">6.  Interim report</text>
+<text x="386" y="267" text-anchor="end" fill="#6b7280" font-size="11">8–10</text>
+<rect x="611" y="256" width="88" height="14" rx="3" fill="#2E7D5B"/>
+<line x1="20" y1="302" x2="1370" y2="302" stroke="#e5e7eb"/>
+<text x="20" y="293" fill="#111827">7.  Energy and CO₂e measurement layer; admin panel</text>
+<text x="386" y="293" text-anchor="end" fill="#6b7280" font-size="11">10–13</text>
+<rect x="671" y="282" width="118" height="14" rx="3" fill="#1F6B4A"/>
+<line x1="20" y1="328" x2="1370" y2="328" stroke="#e5e7eb"/>
+<text x="20" y="319" fill="#111827">8.  Expand benchmark suite to 30–50 cases</text>
+<text x="386" y="319" text-anchor="end" fill="#6b7280" font-size="11">11–14</text>
+<rect x="701" y="308" width="118" height="14" rx="3" fill="#1F6B4A"/>
+<line x1="20" y1="354" x2="1370" y2="354" stroke="#e5e7eb"/>
+<text x="20" y="345" fill="#111827">9.  Pilot experiment runs and fixes</text>
+<text x="386" y="345" text-anchor="end" fill="#6b7280" font-size="11">13–14</text>
+<rect x="761" y="334" width="58" height="14" rx="3" fill="#6AAE8E"/>
+<line x1="20" y1="380" x2="1370" y2="380" stroke="#e5e7eb"/>
+<text x="20" y="371" fill="#111827">10.  Christmas break and semester 1 exams</text>
+<text x="386" y="371" text-anchor="end" fill="#6b7280" font-size="11">15–19</text>
+<rect x="821" y="360" width="148" height="14" rx="3" fill="#BFBFBF"/>
+<line x1="20" y1="406" x2="1370" y2="406" stroke="#e5e7eb"/>
+<text x="20" y="397" fill="#111827">11.  Dashboard polish and Nielsen heuristic audit</text>
+<text x="386" y="397" text-anchor="end" fill="#6b7280" font-size="11">20–21</text>
+<rect x="971" y="386" width="58" height="14" rx="3" fill="#4C9F79"/>
+<line x1="20" y1="432" x2="1370" y2="432" stroke="#e5e7eb"/>
+<text x="20" y="423" fill="#111827">12.  Hardening, bug fixes and documentation</text>
+<text x="386" y="423" text-anchor="end" fill="#6b7280" font-size="11">20–22</text>
+<rect x="971" y="412" width="88" height="14" rx="3" fill="#1F6B4A"/>
+<line x1="20" y1="458" x2="1370" y2="458" stroke="#e5e7eb"/>
+<text x="20" y="449" fill="#111827">13.  Full experiment runs under both conditions</text>
+<text x="386" y="449" text-anchor="end" fill="#6b7280" font-size="11">22–26</text>
+<rect x="1031" y="438" width="148" height="14" rx="3" fill="#6AAE8E"/>
+<line x1="20" y1="484" x2="1370" y2="484" stroke="#e5e7eb"/>
+<text x="20" y="475" fill="#111827">14.  Statistical analysis and failure analysis</text>
+<text x="386" y="475" text-anchor="end" fill="#6b7280" font-size="11">26–28</text>
+<rect x="1151" y="464" width="88" height="14" rx="3" fill="#6AAE8E"/>
+<line x1="20" y1="510" x2="1370" y2="510" stroke="#e5e7eb"/>
+<text x="20" y="501" fill="#111827">15.  Dissertation writing</text>
+<text x="386" y="501" text-anchor="end" fill="#6b7280" font-size="11">24–31</text>
+<rect x="1091" y="490" width="238" height="14" rx="3" fill="#2E7D5B"/>
+<line x1="20" y1="536" x2="1370" y2="536" stroke="#e5e7eb"/>
+<text x="20" y="527" fill="#111827">16.  Final review, demonstration and submission</text>
+<text x="386" y="527" text-anchor="end" fill="#6b7280" font-size="11">31–32</text>
+<rect x="1301" y="516" width="58" height="14" rx="3" fill="#6AAE8E"/>
+<line x1="20" y1="562" x2="1370" y2="562" stroke="#e5e7eb"/>
+<text x="20" y="553" fill="#111827">17.  Unit and integration tests (continuous)</text>
+<text x="386" y="553" text-anchor="end" fill="#6b7280" font-size="11">6–30</text>
+<rect x="551" y="542" width="748" height="14" rx="3" stroke="#047857" stroke-dasharray="4 3" fill="#a7f3d0"/>
+<line x1="550" y1="90" x2="550" y2="568" stroke="#b45309" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="554" y="580" font-size="11" fill="#b45309" font-weight="700">Today (end of week 5)</text>
+<line x1="700" y1="90" x2="700" y2="592" stroke="#b91c1c" stroke-width="1.2" stroke-dasharray="3 3"/>
+<polygon points="700,586 706,592 700,598 694,592" fill="#b91c1c"/>
+<text x="700" y="610" text-anchor="middle" font-size="11" fill="#b91c1c" font-weight="700">Interim report due (wk 10)</text>
+<line x1="820" y1="90" x2="820" y2="610" stroke="#b91c1c" stroke-width="1.2" stroke-dasharray="3 3"/>
+<polygon points="820,604 826,610 820,616 814,610" fill="#b91c1c"/>
+<text x="820" y="628" text-anchor="middle" font-size="11" fill="#b91c1c" font-weight="700">Semester 1 ends (wk 14)</text>
+<line x1="1000" y1="90" x2="1000" y2="592" stroke="#b91c1c" stroke-width="1.2" stroke-dasharray="3 3"/>
+<polygon points="1000,586 1006,592 1000,598 994,592" fill="#b91c1c"/>
+<text x="1000" y="610" text-anchor="middle" font-size="11" fill="#b91c1c" font-weight="700">Semester 2 starts (wk 20)</text>
+<line x1="1360" y1="90" x2="1360" y2="610" stroke="#b91c1c" stroke-width="1.2" stroke-dasharray="3 3"/>
+<polygon points="1360,604 1366,610 1360,616 1354,610" fill="#b91c1c"/>
+<text x="1360" y="628" text-anchor="middle" font-size="11" fill="#b91c1c" font-weight="700" text-anchor="end" dx="12">Final submission (wk 32)</text>
+<rect x="20" y="645" width="18" height="12" rx="3" fill="#2E7D5B"/><text x="44" y="656" font-size="11" fill="#374151">Research</text>
+<rect x="121.2" y="645" width="18" height="12" rx="3" fill="#3C8F6A"/><text x="145.2" y="656" font-size="11" fill="#374151">Requirements</text>
+<rect x="248.0" y="645" width="18" height="12" rx="3" fill="#4C9F79"/><text x="272.0" y="656" font-size="11" fill="#374151">Analysis & design</text>
+<rect x="406.8" y="645" width="18" height="12" rx="3" fill="#1F6B4A"/><text x="430.8" y="656" font-size="11" fill="#374151">Implementation</text>
+<rect x="546.4000000000001" y="645" width="18" height="12" rx="3" fill="#6AAE8E"/><text x="570.4000000000001" y="656" font-size="11" fill="#374151">Testing & evaluation</text>
+<rect x="724.4000000000001" y="645" width="18" height="12" rx="3" fill="#BFBFBF"/><text x="748.4000000000001" y="656" font-size="11" fill="#374151">Break</text>
+<rect x="806.4000000000001" y="645" width="18" height="12" rx="3" fill="#a7f3d0" stroke="#047857" stroke-dasharray="4 3"/><text x="830.4000000000001" y="656" font-size="11" fill="#374151">Continuous</text>
+</svg>
