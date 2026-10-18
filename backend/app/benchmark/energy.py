@@ -132,7 +132,12 @@ class RaplMeter:
 
 
 def measure_idle_power_watts(seconds: float = 1.0, method: str = "rapl") -> float | None:
-    """Sample the machine-wide meter while sleeping to estimate the idle draw."""
+    """Sample the machine-wide meter while sleeping to estimate the idle draw.
+
+    For RAPL/PCM the mean over the period is used. For LHM, whose readings are one-second
+    averages that include background spikes, the *lowest* steady reading is taken as the
+    idle floor; the mean is kept in the sample details for the record.
+    """
     if method == "rapl" and rapl_available():
         m: Any = RaplMeter()
     elif method == "pcm" and pcm_available():
@@ -144,6 +149,10 @@ def measure_idle_power_watts(seconds: float = 1.0, method: str = "rapl") -> floa
     m.start()
     time.sleep(seconds)
     s = m.stop()
+    if method == "lhm":
+        readings = [w for _, w in getattr(m, "_updates", []) if w > 0]
+        if readings:
+            return min(readings)
     return s.joules / s.wall_seconds if s.wall_seconds else None
 
 

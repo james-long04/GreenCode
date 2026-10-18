@@ -105,6 +105,7 @@ class EnergyContext:
             if self.idle_watts is not None:
                 sample.idle_joules = self.idle_watts * sample.wall_seconds
                 sample.details["idle_watts"] = self.idle_watts
+                sample.details["mean_watts"] = sample.joules / sample.wall_seconds if sample.wall_seconds else None
             samples.append(sample)
         return result, samples, wall
 

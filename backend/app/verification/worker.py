@@ -40,6 +40,9 @@ except ImportError:  # Windows
 # psutil must be imported *before* _harden() blocks the modules it depends on
 # (subprocess, socket); it is the only way to read peak working set on Windows.
 try:
+    _extra = os.environ.get("GREENCODE_PSUTIL_DIR")
+    if _extra and _extra not in sys.path:
+        sys.path.append(_extra)
     import psutil as _psutil
 except Exception:  # noqa: BLE001
     _psutil = None  # type: ignore[assignment]

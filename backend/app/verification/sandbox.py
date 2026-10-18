@@ -74,6 +74,14 @@ def run_job(job: dict[str, Any], settings: Settings | None = None,
                 env[key] = os.environ[key]
     else:
         env["PATH"] = "/usr/bin:/bin"
+    # ``-I`` ignores user-site packages, so pass the parent's psutil location explicitly.
+    # The worker adds it to sys.path only to import psutil, before hardening.
+    try:
+        import psutil as _ps
+
+        env["GREENCODE_PSUTIL_DIR"] = os.path.dirname(os.path.dirname(_ps.__file__))
+    except Exception:  # noqa: BLE001
+        pass
     with tempfile.TemporaryDirectory(prefix="greencode-sandbox-") as cwd:
         try:
             proc = subprocess.run(

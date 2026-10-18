@@ -357,6 +357,21 @@ function RunStats({ original, candidate }: { original: BenchmarkRun; candidate: 
   );
 }
 
+/** For machine-wide energy meters, show the mean and idle power behind the figure. */
+function wattsNote(a?: Measurement, b?: Measurement) {
+  const d = (m?: Measurement) => (m?.details ?? {}) as Record<string, unknown>;
+  const idle = d(a).idle_watts ?? d(b).idle_watts;
+  const ma = d(a).mean_watts;
+  const mb = d(b).mean_watts;
+  if (typeof idle !== "number" && typeof ma !== "number") return null;
+  const f = (v: unknown) => (typeof v === "number" ? `${v.toFixed(1)} W` : "–");
+  return (
+    <div className="muted" style={{ fontSize: "var(--text-xs)", marginTop: 4 }}>
+      mean {f(ma)} / {f(mb)}{typeof idle === "number" ? `, idle floor ${f(idle)}` : ""}
+    </div>
+  );
+}
+
 function MeasurementTable({ original, candidate }: { original: BenchmarkRun; candidate: BenchmarkRun }) {
   const keys = Array.from(new Set([...original.measurements, ...candidate.measurements].map((m) => `${m.metric}|${m.source}`)));
   const find = (r: BenchmarkRun, key: string): Measurement | undefined => {
@@ -397,6 +412,7 @@ function MeasurementTable({ original, candidate }: { original: BenchmarkRun; can
                     <Badge kind={method === "measured" ? "ok" : method === "derived" ? "info" : "warn"}>
                       <Term id={method === "measured" ? "measured" : method === "derived" ? "derived" : "estimated"}>{method}</Term>
                     </Badge>
+                    {wattsNote(a, b)}
                   </td>
                   <td className="num">{a ? `${fmt.num(a.value, 3)} ${a.unit}` : "–"}</td>
                   <td className="num">{b ? `${fmt.num(b.value, 3)} ${b.unit}` : "–"}</td>
