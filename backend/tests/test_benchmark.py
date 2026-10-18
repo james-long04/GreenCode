@@ -54,3 +54,19 @@ def test_benchmark_python_end_to_end():
     assert out.ok and out.summary and out.summary.n == 4
     assert any(e.source == "estimate" for e in out.energy)
     assert out.environment["logical_cores"] == os.cpu_count()
+
+
+def test_pcm_csv_parser_sums_system_energy(tmp_path):
+    from app.benchmark.energy import _read_pcm_csv
+
+    f = tmp_path / "pcm.csv"
+    f.write_text(
+        "System;;;;Socket 0;;\n"
+        "Date;Time;Proc Energy (Joules);DRAM Energy (Joules);EXEC;IPC;\n"
+        "2026-10-18;15:00:00.0;1.25;0.30;0.5;1.1;\n"
+        "2026-10-18;15:00:00.1;1.75;0.20;0.6;1.2;\n"
+        "2026-10-18;15:00:00.2;N/A;;0.6;1.2;\n"
+    )
+    rows = _read_pcm_csv(str(f))
+    assert [r["proc_j"] for r in rows] == [1.25, 1.75, None]
+    assert [r["dram_j"] for r in rows] == [0.30, 0.20, None]

@@ -51,8 +51,10 @@ class Settings(BaseSettings):
     # --- energy / carbon -------------------------------------------------
     energy_method: str = Field(
         default="auto",
-        description="auto | rapl | codecarbon | estimate. 'auto' picks the best available.",
+        description="auto | rapl | pcm | codecarbon | estimate. 'auto' picks the best available.",
     )
+    # Path to Intel PCM's pcm.exe (Windows). Unset means search PATH.
+    pcm_path: str | None = None
     carbon_factor_region: str = "IE"
     estimate_cpu_tdp_watts: float = 65.0
     estimate_memory_watts_per_gb: float = 0.3725  # Green Algorithms (Lannelongue et al., 2021)
@@ -72,7 +74,7 @@ class Settings(BaseSettings):
 RUNTIME_ADJUSTABLE: frozenset[str] = frozenset({
     "llm_provider", "ollama_model", "ollama_base_url", "llm_temperature", "llm_seed",
     "benchmark_warmup_runs", "benchmark_repetitions", "benchmark_timeout_seconds",
-    "energy_method", "carbon_factor_region", "estimate_cpu_tdp_watts", "estimate_pue",
+    "energy_method", "pcm_path", "carbon_factor_region", "estimate_cpu_tdp_watts", "estimate_pue",
     "sandbox_timeout_seconds", "sandbox_memory_limit_mb",
 })
 

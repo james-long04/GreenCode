@@ -85,8 +85,8 @@ class EnergyContext:
         self.settings = settings or get_settings()
         self.method = select_method(self.settings)
         self.idle_watts: float | None = None
-        if self.method == "rapl":
-            self.idle_watts = measure_idle_power_watts(1.0)
+        if self.method in ("rapl", "pcm"):
+            self.idle_watts = measure_idle_power_watts(2.0, self.method)
 
     def measure(self, fn, *args, **kwargs):  # type: ignore[no-untyped-def]
         """Run ``fn`` and return (result, [energy samples])."""

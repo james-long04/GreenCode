@@ -65,3 +65,24 @@ alongside every measurement so measured and estimated figures can be compared.
   scope. The provider abstraction allows the model to be varied as a factor.
 * **Reliability** – every run stores the environment snapshot, settings, prompt,
   raw model response and all raw samples, so a result can be re-examined or reproduced.
+
+
+## Energy measurement on Windows (Intel PCM)
+
+The Linux powercap interface does not exist on Windows, so on the development laptop
+(Intel Core Ultra 5 135U) GreenCode reads the same RAPL counters through Intel
+Performance Counter Monitor. `pcm.exe` runs as a background sampler at 100 ms for
+the duration of each benchmark window; package and DRAM energy per sample are summed
+and scaled by the fraction of the window the samples cover, and the coverage ratio is
+stored with the measurement. Because the sampler is machine-wide, a two-second idle
+baseline is recorded once per session and subtracted, as for RAPL on Linux.
+
+Limitations to report: sampling granularity is coarse relative to millisecond
+benchmarks, so per-run energy should be read at the level of the whole repetition
+loop, not individual samples; PCM requires its kernel driver and an administrator
+shell; and it is Intel-only. The coefficient estimate is still recorded alongside
+every PCM measurement so the two can be compared (H4).
+
+Precedent: Bachras and Jacobsen, "Beyond Performance: Measuring the Environmental
+Impact of Analytical Databases" (arXiv:2504.18980, 2025) use RAPL package and DRAM
+energy multiplied by regional grid intensity in the same way.

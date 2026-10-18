@@ -244,7 +244,7 @@ export interface Health {
   status: string;
   database: boolean;
   llm: { provider: string; ok: boolean; model?: string; model_available?: boolean; models?: string[]; error?: string };
-  energy: { selected: string; rapl: boolean; codecarbon: boolean };
+  energy: { selected: string; rapl: boolean; pcm: boolean; codecarbon: boolean };
   settings: { model: string; provider: string; repetitions: number; warmup: number; region: string };
 }
 
