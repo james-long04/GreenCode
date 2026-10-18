@@ -67,11 +67,16 @@ alongside every measurement so measured and estimated figures can be compared.
   raw model response and all raw samples, so a result can be re-examined or reproduced.
 
 
-## Energy measurement on Windows (Intel PCM)
+## Energy measurement on Windows (LibreHardwareMonitor or Intel PCM)
 
 The Linux powercap interface does not exist on Windows, so on the development laptop
-(Intel Core Ultra 5 135U) GreenCode reads the same RAPL counters through Intel
-Performance Counter Monitor. `pcm.exe` runs as a background sampler at 100 ms for
+(Intel Core Ultra 5 135U) GreenCode reads the same RAPL counters through a third-party
+driver. The default route is LibreHardwareMonitor, which ships a signed kernel driver and
+exposes "CPU Package" power as JSON from its built-in web server; the meter polls it every
+100 ms and integrates power over the window. LHM refreshes about once a second, so the
+number of distinct readings is stored with each measurement. The alternative is Intel
+Performance Counter Monitor, which gives per-sample energy directly but requires
+compiling and test-signing its MSR driver on Windows. `pcm.exe` runs as a background sampler at 100 ms for
 the duration of each benchmark window; package and DRAM energy per sample are summed
 and scaled by the fraction of the window the samples cover, and the coverage ratio is
 stored with the measurement. Because the sampler is machine-wide, a two-second idle

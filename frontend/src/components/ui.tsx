@@ -199,6 +199,7 @@ const GLOSSARY: Record<string, string> = {
   wilcoxon: "Wilcoxon signed-rank test on paired cases, applied to log ratios.",
   fisher: "Fisher's exact test: compares two proportions, such as correctness rates.",
   rapl: "RAPL: Intel/AMD hardware energy counters. Real measurement, machine-wide.",
+  lhm: "LibreHardwareMonitor: reads the CPU package power from RAPL on Windows through a signed driver. Real measurement, machine-wide, refreshed about once a second.",
   pcm: "Intel PCM: reads the RAPL counters on Windows. Real measurement, machine-wide, sampled at 100 ms.",
   estimated: "Estimated from CPU time and TDP with a documented coefficient model. Not a hardware reading.",
   measured: "Read from hardware energy counters or CodeCarbon, not modelled.",

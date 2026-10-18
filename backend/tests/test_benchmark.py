@@ -70,3 +70,15 @@ def test_pcm_csv_parser_sums_system_energy(tmp_path):
     rows = _read_pcm_csv(str(f))
     assert [r["proc_j"] for r in rows] == [1.25, 1.75, None]
     assert [r["dram_j"] for r in rows] == [0.30, 0.20, None]
+
+
+def test_lhm_json_parser_finds_cpu_package_power():
+    from app.benchmark.energy import _lhm_package_watts
+
+    tree = {"Text": "Sensor", "Children": [{"Text": "LAPTOP", "Children": [
+        {"Text": "Intel Core Ultra 5 135U", "Children": [
+            {"Text": "Powers", "Children": [
+                {"Text": "CPU Cores", "SensorId": "/intelcpu/0/power/1", "Value": "3.2 W"},
+                {"Text": "CPU Package", "SensorId": "/intelcpu/0/power/0", "Value": "7,5 W"},
+            ]}]}]}]}
+    assert _lhm_package_watts(tree) == ("CPU Package", 7.5)

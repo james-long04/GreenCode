@@ -10,6 +10,9 @@ Software Energy Intensity distinction between *measurement*, *calculation* and
 ``pcm``         Intel Performance Counter Monitor (``pcm.exe``) sampling the same RAPL
                 counters on Windows, where the powercap interface does not exist.
                 Package and DRAM energy per sample are summed over the measured window.
+``lhm``         LibreHardwareMonitor's built-in web server (Windows). LHM ships a signed
+                driver and exposes the CPU package power (from RAPL) as JSON; the meter
+                polls it and integrates power over the window.
 ``codecarbon``  The CodeCarbon library's tracker (uses RAPL/NVML where available and
                 falls back to TDP-based estimation internally).
 ``estimate``    A documented coefficient model (Green Algorithms, Lannelongue et al.
@@ -30,7 +33,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
+import json
+import urllib.request
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -131,6 +137,8 @@ def measure_idle_power_watts(seconds: float = 1.0, method: str = "rapl") -> floa
         m: Any = RaplMeter()
     elif method == "pcm" and pcm_available():
         m = PcmMeter()
+    elif method == "lhm" and lhm_available():
+        m = LhmMeter()
     else:
         return None
     m.start()
@@ -272,6 +280,108 @@ class PcmMeter:
 
 
 # ----------------------------------------------------------------------------
+# LibreHardwareMonitor (Windows, signed driver, JSON over HTTP)
+# ----------------------------------------------------------------------------
+
+LHM_POLL_SECONDS = 0.1
+
+
+def _lhm_fetch(url: str, timeout: float = 1.0) -> dict[str, Any] | None:
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:  # noqa: S310
+            return json.loads(resp.read().decode("utf-8", errors="replace"))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _lhm_power_sensors(tree: dict[str, Any]) -> list[tuple[str, float]]:
+    """Walk LHM's nested JSON and return (name, watts) for CPU power sensors."""
+    out: list[tuple[str, float]] = []
+
+    def walk(node: dict[str, Any], path: list[str]) -> None:
+        sid = str(node.get("SensorId", ""))
+        text = str(node.get("Text", ""))
+        if "/power/" in sid and ("cpu" in sid.lower() or any("cpu" in p.lower() for p in path)):
+            raw = str(node.get("Value", "")).replace("W", "").replace(",", ".").strip()
+            try:
+                out.append((text, float(raw)))
+            except ValueError:
+                pass
+        for child in node.get("Children", []) or []:
+            walk(child, path + [text])
+
+    walk(tree, [])
+    return out
+
+
+def _lhm_package_watts(tree: dict[str, Any]) -> tuple[str, float] | None:
+    sensors = _lhm_power_sensors(tree)
+    for name, w in sensors:
+        if "package" in name.lower():
+            return name, w
+    return sensors[0] if sensors else None
+
+
+@functools.lru_cache(maxsize=1)
+def lhm_available() -> bool:
+    url = get_settings().lhm_url
+    tree = _lhm_fetch(url)
+    return bool(tree) and _lhm_package_watts(tree) is not None
+
+
+class LhmMeter:
+    """Polls LibreHardwareMonitor's web server and integrates CPU package power.
+
+    LHM refreshes sensors about once a second, so this is coarse: the meter samples
+    every 100 ms, integrates with the trapezoid rule and records how many distinct
+    readings it saw. Treat sub-second windows with caution and prefer longer runs.
+    """
+
+    source = "lhm"
+
+    def __init__(self, settings: Settings | None = None) -> None:
+        self.url = (settings or get_settings()).lhm_url
+        self._samples: list[tuple[float, float]] = []
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+        self._t0 = 0.0
+        self._sensor = ""
+
+    def _poll(self) -> None:
+        while not self._stop.is_set():
+            tree = _lhm_fetch(self.url, timeout=0.5)
+            if tree:
+                pw = _lhm_package_watts(tree)
+                if pw:
+                    self._sensor, watts = pw
+                    self._samples.append((time.perf_counter(), watts))
+            self._stop.wait(LHM_POLL_SECONDS)
+
+    def start(self) -> None:
+        self._samples.clear()
+        self._stop.clear()
+        self._t0 = time.perf_counter()
+        self._thread = threading.Thread(target=self._poll, daemon=True)
+        self._thread.start()
+
+    def stop(self) -> EnergySample:
+        t1 = time.perf_counter()
+        wall = t1 - self._t0
+        self._stop.set()
+        if self._thread:
+            self._thread.join(timeout=2)
+        pts = [(self._t0, self._samples[0][1])] + self._samples + [(t1, self._samples[-1][1])] if self._samples else []
+        joules = 0.0
+        for (ta, wa), (tb, wb) in zip(pts, pts[1:]):
+            joules += (wa + wb) / 2 * max(tb - ta, 0.0)
+        distinct = len({round(w, 3) for _, w in self._samples})
+        mean_w = joules / wall if wall else 0.0
+        return EnergySample(joules=joules, method="measured", source=self.source, wall_seconds=wall,
+                            details={"sensor": self._sensor, "polls": len(self._samples), "distinct_readings": distinct,
+                                     "mean_watts": mean_w, "tool": "LibreHardwareMonitor"})
+
+
+# ----------------------------------------------------------------------------
 # CodeCarbon
 # ----------------------------------------------------------------------------
 
@@ -353,12 +463,16 @@ def select_method(settings: Settings | None = None) -> str:
             return "rapl"
         if pcm_available():
             return "pcm"
+        if lhm_available():
+            return "lhm"
         if codecarbon_available():
             return "codecarbon"
         return "estimate"
     if method == "rapl" and not rapl_available():
         return "estimate"
     if method == "pcm" and not pcm_available():
+        return "estimate"
+    if method == "lhm" and not lhm_available():
         return "estimate"
     if method == "codecarbon" and not codecarbon_available():
         return "estimate"
@@ -371,6 +485,8 @@ def make_meter(method: str, settings: Settings | None = None):  # type: ignore[n
         return RaplMeter()
     if method == "pcm":
         return PcmMeter(settings)
+    if method == "lhm":
+        return LhmMeter(settings)
     if method == "codecarbon":
         iso = {"IE": "IRL", "EU": "IRL", "WORLD": "IRL"}.get(settings.carbon_factor_region, "IRL")
         return CodeCarbonMeter(country_iso=iso)

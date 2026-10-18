@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session, selectinload
 from app import schemas
 from app.ai.provider import build_provider
 from app.analysis.engine import all_rules
-from app.benchmark.energy import codecarbon_available, pcm_available, rapl_available, select_method
+from app.benchmark.energy import codecarbon_available, lhm_available, pcm_available, rapl_available, select_method
 from app.config import get_settings
 from app.db.models import Analysis, BenchmarkRun, CarbonFactor, Finding, Optimisation, Project
 from app.db.session import get_db, session_scope
@@ -47,7 +47,7 @@ def health(db: Session = Depends(get_db)) -> dict[str, Any]:
         "status": "ok" if db_ok else "degraded",
         "database": db_ok,
         "llm": provider.health(),
-        "energy": {"selected": select_method(settings), "rapl": rapl_available(), "pcm": pcm_available(),
+        "energy": {"selected": select_method(settings), "rapl": rapl_available(), "pcm": pcm_available(), "lhm": lhm_available(),
                    "codecarbon": codecarbon_available()},
         "settings": {"model": settings.ollama_model, "provider": settings.llm_provider,
                      "repetitions": settings.benchmark_repetitions, "warmup": settings.benchmark_warmup_runs,
