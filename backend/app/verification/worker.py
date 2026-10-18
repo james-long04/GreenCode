@@ -37,23 +37,30 @@ try:
 except ImportError:  # Windows
     resource = None  # type: ignore[assignment]
 
+# psutil must be imported *before* _harden() blocks the modules it depends on
+# (subprocess, socket); it is the only way to read peak working set on Windows.
+try:
+    import psutil as _psutil
+except Exception:  # noqa: BLE001
+    _psutil = None  # type: ignore[assignment]
+
 
 def _rusage():  # type: ignore[no-untyped-def]
     """(user_s, system_s, peak_rss_kb) portable across POSIX and Windows."""
     if resource is not None:
         ru = resource.getrusage(resource.RUSAGE_SELF)
         return ru.ru_utime, ru.ru_stime, ru.ru_maxrss
-    try:
-        import psutil  # available on Windows installs via requirements.txt
-
-        p = psutil.Process()
-        ct = p.cpu_times()
-        mi = p.memory_info()
-        peak = getattr(mi, "peak_wset", mi.rss)
-        return ct.user, ct.system, peak / 1024
-    except Exception:  # noqa: BLE001
-        t = time.process_time()
-        return t, 0.0, 0
+    if _psutil is not None:
+        try:
+            p = _psutil.Process()
+            ct = p.cpu_times()
+            mi = p.memory_info()
+            peak = getattr(mi, "peak_wset", mi.rss)
+            return ct.user, ct.system, peak / 1024
+        except Exception:  # noqa: BLE001
+            pass
+    t = time.process_time()
+    return t, 0.0, 0
 
 
 def _harden() -> None:

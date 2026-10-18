@@ -203,6 +203,7 @@ const GLOSSARY: Record<string, string> = {
   pcm: "Intel PCM: reads the RAPL counters on Windows. Real measurement, machine-wide, sampled at 100 ms.",
   estimated: "Estimated from CPU time and TDP with a documented coefficient model. Not a hardware reading.",
   measured: "Read from hardware energy counters or CodeCarbon, not modelled.",
+  derived: "Calculated from a measured value and a documented factor, for example measured joules × the grid carbon factor.",
   co2e: "Grams of CO₂ equivalent, from energy × the grid carbon factor stored for the region.",
 };
 

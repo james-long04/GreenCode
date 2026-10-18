@@ -394,8 +394,8 @@ function MeasurementTable({ original, candidate }: { original: BenchmarkRun; can
                   <td className="mono">{k.split("|")[0]}</td>
                   <td>
                     {a?.source ?? b?.source}{" "}
-                    <Badge kind={method === "measured" ? "ok" : "warn"}>
-                      <Term id={method === "measured" ? "measured" : "estimated"}>{method}</Term>
+                    <Badge kind={method === "measured" ? "ok" : method === "derived" ? "info" : "warn"}>
+                      <Term id={method === "measured" ? "measured" : method === "derived" ? "derived" : "estimated"}>{method}</Term>
                     </Badge>
                   </td>
                   <td className="num">{a ? `${fmt.num(a.value, 3)} ${a.unit}` : "–"}</td>

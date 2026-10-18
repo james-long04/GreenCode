@@ -241,7 +241,9 @@ def _store_run(db: Session, opt: Optimisation, variant: str, outcome: BenchmarkO
             m("energy_joules_net", e.net_joules, "J", method=e.method, source=e.source,
               details={"idle_joules": e.idle_joules})
         if factor is not None:
-            m("co2e_grams", co2e_grams(e.net_joules, factor.grams_co2e_per_kwh), "gCO2e", method="estimated",
+            # CO2e is energy x grid factor: "derived" when the energy was measured, "estimated" otherwise.
+            m("co2e_grams", co2e_grams(e.net_joules, factor.grams_co2e_per_kwh), "gCO2e",
+              method="derived" if e.method == "measured" else "estimated",
               source=e.source, factor_id=factor.id,
               details={"grams_per_kwh": factor.grams_co2e_per_kwh, "factor_source": factor.source})
     return run

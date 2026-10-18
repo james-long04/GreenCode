@@ -300,7 +300,7 @@ function ResultsTable({ rows }: { rows: ResultRow[] }) {
                 <td>{r.verdict && <Badge kind={r.verdict}>{fmt.label(r.verdict)}</Badge>}</td>
                 <td className="num">{fmt.pct(r.energy_percent_change)}</td>
                 <td>
-                  {r.energy_source} {r.energy_method && <Badge kind={r.energy_method === "measured" ? "ok" : "warn"}>{r.energy_method}</Badge>}
+                  {r.energy_source} {r.energy_method && <Badge kind={r.energy_method === "measured" ? "ok" : r.energy_method === "derived" ? "info" : "warn"}>{r.energy_method}</Badge>}
                 </td>
                 <td className="muted">{r.failure_reason?.slice(0, 80)}</td>
               </tr>

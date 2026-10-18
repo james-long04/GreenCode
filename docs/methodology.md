@@ -72,9 +72,13 @@ alongside every measurement so measured and estimated figures can be compared.
 The Linux powercap interface does not exist on Windows, so on the development laptop
 (Intel Core Ultra 5 135U) GreenCode reads the same RAPL counters through a third-party
 driver. The default route is LibreHardwareMonitor, which ships a signed kernel driver and
-exposes "CPU Package" power as JSON from its built-in web server; the meter polls it every
-100 ms and integrates power over the window. LHM refreshes about once a second, so the
-number of distinct readings is stored with each measurement. The alternative is Intel
+exposes "CPU Package" power as JSON from its built-in web server. LHM refreshes about once a
+second and a reading observed at time *u* is the mean power over the preceding refresh
+interval, so the meter keeps polling until the first refresh after the window closes and
+integrates each reading over the part of its interval that overlaps the window. The number
+of distinct readings and the coverage fraction are stored with each measurement; a six-second
+idle baseline is taken once per session. CO₂e derived from a measured energy value is tagged
+"derived" rather than "estimated", since only the grid factor is modelled. The alternative is Intel
 Performance Counter Monitor, which gives per-sample energy directly but requires
 compiling and test-signing its MSR driver on Windows. `pcm.exe` runs as a background sampler at 100 ms for
 the duration of each benchmark window; package and DRAM energy per sample are summed

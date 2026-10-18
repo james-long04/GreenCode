@@ -147,6 +147,7 @@ def measure_idle_power_watts(seconds: float = 1.0, method: str = "rapl") -> floa
     return s.joules / s.wall_seconds if s.wall_seconds else None
 
 
+
 # ----------------------------------------------------------------------------
 # Intel PCM (Windows route to RAPL)
 # ----------------------------------------------------------------------------
@@ -332,53 +333,78 @@ def lhm_available() -> bool:
 class LhmMeter:
     """Polls LibreHardwareMonitor's web server and integrates CPU package power.
 
-    LHM refreshes sensors about once a second, so this is coarse: the meter samples
-    every 100 ms, integrates with the trapezoid rule and records how many distinct
-    readings it saw. Treat sub-second windows with caution and prefer longer runs.
+    LHM refreshes its sensors about once a second, so a reading observed at time ``u_k``
+    is the average power over the *preceding* refresh interval ``(u_{k-1}, u_k]``. The
+    meter therefore keeps polling after the window closes until it has seen the first
+    refresh that lands after ``t1``, then integrates each reading over the part of its
+    interval that overlaps the window. Without this, the first second of every window
+    reports pre-window (idle) power and the last second of activity is never seen.
     """
 
     source = "lhm"
+    MAX_TAIL_SECONDS = 3.0
 
     def __init__(self, settings: Settings | None = None) -> None:
         self.url = (settings or get_settings()).lhm_url
-        self._samples: list[tuple[float, float]] = []
+        self._updates: list[tuple[float, float]] = []  # (time observed, watts) at value changes only
+        self._polls = 0
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         self._t0 = 0.0
         self._sensor = ""
 
     def _poll(self) -> None:
+        last: float | None = None
         while not self._stop.is_set():
             tree = _lhm_fetch(self.url, timeout=0.5)
             if tree:
                 pw = _lhm_package_watts(tree)
                 if pw:
                     self._sensor, watts = pw
-                    self._samples.append((time.perf_counter(), watts))
+                    self._polls += 1
+                    if last is None or watts != last:
+                        self._updates.append((time.perf_counter(), watts))
+                        last = watts
             self._stop.wait(LHM_POLL_SECONDS)
 
     def start(self) -> None:
-        self._samples.clear()
+        self._updates.clear()
+        self._polls = 0
         self._stop.clear()
-        self._t0 = time.perf_counter()
         self._thread = threading.Thread(target=self._poll, daemon=True)
         self._thread.start()
+        # Capture the reading in force when the window opens.
+        deadline = time.time() + 2.0
+        while not self._updates and time.time() < deadline:
+            time.sleep(0.02)
+        self._t0 = time.perf_counter()
 
     def stop(self) -> EnergySample:
         t1 = time.perf_counter()
         wall = t1 - self._t0
+        # Wait for the first refresh after the window closed so the tail is covered.
+        deadline = time.time() + self.MAX_TAIL_SECONDS
+        while time.time() < deadline and not any(u > t1 for u, _ in self._updates):
+            time.sleep(0.05)
         self._stop.set()
         if self._thread:
             self._thread.join(timeout=2)
-        pts = [(self._t0, self._samples[0][1])] + self._samples + [(t1, self._samples[-1][1])] if self._samples else []
+        ups = sorted(self._updates)
         joules = 0.0
-        for (ta, wa), (tb, wb) in zip(pts, pts[1:]):
-            joules += (wa + wb) / 2 * max(tb - ta, 0.0)
-        distinct = len({round(w, 3) for _, w in self._samples})
+        covered = 0.0
+        for i, (u, w) in enumerate(ups):
+            prev = ups[i - 1][0] if i else self._t0 - 1.0  # first reading covers the window start
+            lo, hi = max(prev, self._t0), min(u, t1)
+            if hi > lo:
+                joules += w * (hi - lo)
+                covered += hi - lo
+        if ups and covered < wall:  # window ran past the last refresh we saw
+            joules += ups[-1][1] * (wall - covered)
         mean_w = joules / wall if wall else 0.0
         return EnergySample(joules=joules, method="measured", source=self.source, wall_seconds=wall,
-                            details={"sensor": self._sensor, "polls": len(self._samples), "distinct_readings": distinct,
-                                     "mean_watts": mean_w, "tool": "LibreHardwareMonitor"})
+                            details={"sensor": self._sensor, "polls": self._polls, "distinct_readings": len(ups),
+                                     "mean_watts": mean_w, "coverage": (covered / wall) if wall else 0.0,
+                                     "tool": "LibreHardwareMonitor"})
 
 
 # ----------------------------------------------------------------------------
