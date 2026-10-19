@@ -92,7 +92,7 @@ export function RulesPage() {
               </TableWrap>
             </div>
             <p className="muted" style={{ maxWidth: "75ch" }}>
-              Energy is read from <Term id="rapl">RAPL</Term> counters when available (machine-wide, with idle subtraction), otherwise from CodeCarbon, otherwise{" "}
+              Energy is read from the processor's <Term id="rapl">RAPL</Term> counter through <Term id="lhm">LibreHardwareMonitor</Term> when it is running (machine-wide, with idle subtraction), otherwise from CodeCarbon, otherwise{" "}
               <Term id="estimated">estimated</Term> with a documented coefficient model (Green Algorithms). Every measurement records its method, so{" "}
               <Term id="measured">measured</Term> and estimated figures are never mixed silently.
             </p>

@@ -191,7 +191,7 @@ export function OverviewPage({
               </dd>
               <dt>Energy source</dt>
               <dd>
-                {health.energy.selected} · <Term id="rapl">RAPL</Term> {health.energy.rapl ? "available" : "not available"} · CodeCarbon {health.energy.codecarbon ? "installed" : "not installed"}
+                {health.energy.selected} · <Term id="lhm">LibreHardwareMonitor</Term> {health.energy.lhm ? "running" : "not running"} · CodeCarbon {health.energy.codecarbon ? "installed" : "not installed"}
               </dd>
               <dt>Benchmark</dt>
               <dd>

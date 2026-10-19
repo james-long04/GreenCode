@@ -14,7 +14,7 @@ Job format::
      "call": "solve(data, 5)",                                          # benchmark
      "warmup": 3, "repetitions": 15}
 
-Defence in depth: the parent applies OS resource limits, a timeout, an empty
+Defence in depth: the parent applies a timeout, an empty
 environment and a throw-away working directory; this worker additionally
 disables the obvious escape hatches (network, subprocesses, writing files).
 Docker (see docker-compose.yml) is the recommended outer boundary.
@@ -32,11 +32,6 @@ import time
 import traceback
 import types
 
-try:
-    import resource
-except ImportError:  # Windows
-    resource = None  # type: ignore[assignment]
-
 # psutil must be imported *before* _harden() blocks the modules it depends on
 # (subprocess, socket); it is the only way to read peak working set on Windows.
 try:
@@ -49,10 +44,7 @@ except Exception:  # noqa: BLE001
 
 
 def _rusage():  # type: ignore[no-untyped-def]
-    """(user_s, system_s, peak_rss_kb) portable across POSIX and Windows."""
-    if resource is not None:
-        ru = resource.getrusage(resource.RUSAGE_SELF)
-        return ru.ru_utime, ru.ru_stime, ru.ru_maxrss
+    """(user_s, system_s, peak_rss_kb) via psutil (peak working set on Windows)."""
     if _psutil is not None:
         try:
             p = _psutil.Process()

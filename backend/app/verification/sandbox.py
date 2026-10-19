@@ -15,12 +15,6 @@ from app.config import Settings, get_settings
 
 WORKER_PATH = Path(__file__).with_name("worker.py")
 
-try:  # POSIX only; on Windows the sandbox relies on the timeout and the worker-side hardening.
-    import resource
-except ImportError:  # pragma: no cover - Windows
-    resource = None  # type: ignore[assignment]
-
-
 @dataclass
 class SandboxResult:
     ok: bool
@@ -29,35 +23,6 @@ class SandboxResult:
     error: str | None = None
     stderr: str = ""
     returncode: int | None = None
-
-
-def _make_limiter(settings: Settings):  # type: ignore[no-untyped-def]
-    mem_bytes = settings.sandbox_memory_limit_mb * 1024 * 1024
-    cpu_seconds = settings.sandbox_cpu_seconds
-
-    def _limit() -> None:
-        try:
-            resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
-        except (ValueError, OSError):
-            pass
-        try:
-            resource.setrlimit(resource.RLIMIT_CPU, (cpu_seconds, cpu_seconds + 5))
-        except (ValueError, OSError):
-            pass
-        try:
-            resource.setrlimit(resource.RLIMIT_FSIZE, (1_000_000, 1_000_000))
-        except (ValueError, OSError):
-            pass
-        try:
-            resource.setrlimit(resource.RLIMIT_NPROC, (1, 1))
-        except (ValueError, OSError):
-            pass
-        try:
-            resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-        except (ValueError, OSError):
-            pass
-
-    return _limit
 
 
 def run_job(job: dict[str, Any], settings: Settings | None = None,
@@ -72,8 +37,6 @@ def run_job(job: dict[str, Any], settings: Settings | None = None,
         for key in ("SYSTEMROOT", "SYSTEMDRIVE", "PATH", "TEMP", "TMP", "COMSPEC", "PATHEXT", "WINDIR"):
             if key in os.environ:
                 env[key] = os.environ[key]
-    else:
-        env["PATH"] = "/usr/bin:/bin"
     # ``-I`` ignores user-site packages, so pass the parent's psutil location explicitly.
     # The worker adds it to sys.path only to import psutil, before hardening.
     try:
@@ -92,7 +55,6 @@ def run_job(job: dict[str, Any], settings: Settings | None = None,
                 timeout=timeout,
                 cwd=cwd,
                 env=env,
-                preexec_fn=_make_limiter(settings) if (os.name == "posix" and resource is not None) else None,
             )
         except subprocess.TimeoutExpired:
             return SandboxResult(ok=False, failure_type="timeout",

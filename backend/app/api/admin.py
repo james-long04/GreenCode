@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 
 from app import schemas
 from app.ai.provider import build_provider
-from app.benchmark.energy import codecarbon_available, lhm_available, pcm_available, rapl_available, select_method
+from app.benchmark.energy import codecarbon_available, lhm_available, select_method
 from app.config import (RUNTIME_ADJUSTABLE, admin_token_is_generated, clear_runtime_overrides, effective_admin_token,
                         get_settings, runtime_overrides, set_runtime_overrides)
 from app.db.models import Analysis, BenchmarkRun, CarbonFactor, Finding, Measurement, Optimisation, Project
@@ -98,7 +98,7 @@ def overview(db: Session = Depends(get_db)) -> dict[str, Any]:
                   "database_bytes": db_size, "postgres_version": db_version,
                   "database_url": _mask_url(settings.database_url)},
         "llm": build_provider(settings).health(),
-        "energy": {"selected": select_method(settings), "rapl": rapl_available(), "pcm": pcm_available(), "lhm": lhm_available(), "codecarbon": codecarbon_available(),
+        "energy": {"selected": select_method(settings), "lhm": lhm_available(), "codecarbon": codecarbon_available(),
                    "configured": settings.energy_method},
         "host": {"python": sys.version.split()[0], "platform": platform.platform(), "machine": platform.machine(),
                  "logical_cores": os.cpu_count(), "physical_cores": psutil.cpu_count(logical=False),

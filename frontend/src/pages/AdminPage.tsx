@@ -194,12 +194,8 @@ function SystemSection({ data }: { data: AdminOverview | null }) {
                 {energy.selected} <span className="muted">(configured: {energy.configured})</span>
               </dd>
               <dt>
-                <Term id="rapl">RAPL</Term>
+                <Term id="lhm">LibreHardwareMonitor</Term>
               </dt>
-              <dd>{energy.rapl ? "Available" : "Not available"}</dd>
-              <dt>Intel PCM</dt>
-              <dd>{energy.pcm ? "Available" : "Not available"}</dd>
-              <dt>LibreHardwareMonitor</dt>
               <dd>{energy.lhm ? "Available" : "Not available"}</dd>
               <dt>CodeCarbon</dt>
               <dd>{energy.codecarbon ? "Available" : "Not installed"}</dd>
@@ -247,8 +243,7 @@ const SETTING_HELP: Record<string, string> = {
   benchmark_warmup_runs: "Runs discarded before timing starts.",
   benchmark_repetitions: "Timed runs per variant. More runs, tighter confidence intervals, longer suite.",
   benchmark_timeout_seconds: "Hard stop for one benchmark variant.",
-  energy_method: "auto picks RAPL (Linux), then Intel PCM, then LibreHardwareMonitor (Windows), then CodeCarbon, then the coefficient estimate.",
-  pcm_path: "Full path to pcm.exe if it is not on PATH.",
+  energy_method: "auto picks LibreHardwareMonitor, then CodeCarbon, then the coefficient estimate.",
   lhm_url: "LibreHardwareMonitor web server URL (Options > Remote Web Server > Run).",
   carbon_factor_region: "Region code of the carbon factor used for CO₂e.",
   estimate_cpu_tdp_watts: "CPU TDP used by the coefficient estimate only.",
@@ -259,7 +254,7 @@ const SETTING_HELP: Record<string, string> = {
 
 const SETTING_OPTIONS: Record<string, string[]> = {
   llm_provider: ["ollama", "mock"],
-  energy_method: ["auto", "rapl", "pcm", "lhm", "codecarbon", "estimate"],
+  energy_method: ["auto", "lhm", "codecarbon", "estimate"],
 };
 
 function SettingsSection({ onChanged }: { onChanged: () => void }) {

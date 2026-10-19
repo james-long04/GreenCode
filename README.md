@@ -5,33 +5,35 @@ Final Year Project · BSc Computer Science · TU Dublin
 
 > *Don't just optimise. Prove the impact.*
 
-GreenCode identifies inefficient Python code and SQL queries with deterministic
+GreenCode finds inefficient Python code and SQL queries with a fixed set of
 static-analysis rules, asks a locally hosted coding model (via Ollama) for an
 optimisation, **verifies** the candidate for correctness in a sandbox, and then
 **benchmarks** original and optimised versions for runtime, CPU, memory, energy
-and estimated CO₂e. Every stage writes its evidence to PostgreSQL.
+and CO₂e. Every stage writes its evidence to PostgreSQL and the dashboard shows
+it side by side.
 
 The research question: *to what extent does static-analysis guidance improve the
 correctness, performance and energy efficiency of locally generated AI
-optimisations?* The system therefore runs every benchmark case under three
-conditions and compares them:
+optimisations?* Every benchmark case runs under two conditions against the
+original as baseline:
 
 | Condition | Process |
 |-----------|---------|
-| **Baseline** | the original code/query is benchmarked |
-| **AI-only** | original → local LLM → verify → benchmark |
-| **GreenCode** | original → static analysis → *structured findings* → local LLM → verify → benchmark |
+| **AI-only** | original → local LLM → verify → benchmark → measure |
+| **GreenCode** | original → static analysis → *structured findings* → local LLM → verify → benchmark → measure |
 
-The two AI prompts are identical except for the findings block, so the
-comparison isolates the effect of static-analysis guidance (hypotheses H1–H4 in
-the proposal).
+The two prompts are identical except for the findings block, so the comparison
+isolates the effect of static-analysis guidance (hypotheses H1–H4).
+
+The project runs natively on a Windows laptop. There is no Docker, no cloud and
+no Linux-only code path.
 
 ---
 
 ## Architecture
 
 ```
-React/TS dashboard  ──►  FastAPI  ──►  Static analysis (Python AST · sqlglot + EXPLAIN)
+React/TS dashboard  ──►  FastAPI  ──►  Static analysis (Python ast · sqlglot + EXPLAIN)
                                               │ structured findings
                                               ▼
                                        Ollama (local LLM)        provider abstraction, mock for tests
@@ -43,7 +45,7 @@ React/TS dashboard  ──►  FastAPI  ──►  Static analysis (Python AST �
                                    Benchmark engine                warm-up + N repetitions, interleaved pairs
                                               │
                                               ▼
-                            Measurement: psutil · RAPL / CodeCarbon / coefficient estimate · CO₂e
+                     Measurement: psutil · LibreHardwareMonitor (RAPL) / CodeCarbon / estimate · CO₂e
                                               │
                                               ▼
                                         PostgreSQL evidence store (8 tables)
@@ -54,101 +56,79 @@ backend/app/
   analysis/      base.py, python_rules.py (PY001–PY011), sql_rules.py (SQL001–SQL012), engine.py
   ai/            provider.py (Ollama + Mock), prompts.py (ai_only / greencode), parsing.py
   verification/  worker.py + sandbox.py (restricted subprocess), python_verifier.py, sql_verifier.py
-  benchmark/     runner.py, sql_runner.py, energy.py (rapl | codecarbon | estimate), stats.py
-  experiments/   pipeline.py (Detect→…→Verify), suite.py (3-condition runner), results.py (H1–H4)
-  db/            models.py (projects, analyses, findings, optimisations, test_results,
-                 benchmark_runs, measurements, carbon_factors), session.py, benchdb.py
-  api/routes.py  REST API · main.py
-backend/tests/   100+ pytest tests (unit + integration)
-backend/scripts/ run_suite.py · export_results.py · init_db.py · seed_bench_dataset.py
+  benchmark/     runner.py, sql_runner.py, energy.py (lhm | codecarbon | estimate), stats.py
+  experiments/   pipeline.py (generate → verify → benchmark → measure), suite.py, results.py (H1–H4)
+  db/            models.py, session.py, benchdb.py
+  api/           routes.py (dashboard API), admin.py (admin API) · main.py · logbuffer.py
+backend/tests/   pytest suite (unit + integration; integration skips without PostgreSQL)
+backend/scripts/ init_db.py · seed_bench_dataset.py · run_suite.py · export_results.py
 benchmarks/      python/*.json (18 cases) · sql/*.json (12 cases)
 database/        schema/initial_schema.sql · seed/bench_dataset.sql (controlled SQL dataset)
-frontend/        Vite + React + TypeScript dashboard
-docs/            methodology notes
+frontend/        Vite + React + TypeScript dashboard (Overview, Projects, Analyse, Experiments, Rules, Admin)
+docs/            methodology, architecture, UI audit, diagrams, Gantt plan, reference library (BibTeX)
 ```
 
 ---
 
-## Quick start
+## Quick start (Windows)
 
 ### Prerequisites
 
-* Python 3.11+ · Node 20+ · PostgreSQL 16 (or Docker)
-* [Ollama](https://ollama.com) with a coding model, e.g. `ollama pull qwen2.5-coder:7b`
+* Python 3.12+ · Node 20+ · PostgreSQL 16+ (installed natively)
+* [Ollama](https://ollama.com) with a coding model: `ollama pull qwen2.5-coder:7b`
+* [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases)
+  for energy measurement (optional, see below)
 
-### 1. Infrastructure
+### 1. Database
 
-```bash
-docker compose up -d postgres ollama
-docker compose exec ollama ollama pull qwen2.5-coder:7b
+In `psql` (as the `postgres` superuser):
+
+```sql
+CREATE ROLE greencode WITH LOGIN PASSWORD 'greencode';
+CREATE DATABASE greencode OWNER greencode;
 ```
-
-(or point `GREENCODE_DATABASE_URL` at any PostgreSQL instance and run Ollama natively)
 
 ### 2. Backend
 
-```bash
+```powershell
 cd backend
-python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+copy .env.example .env          # then set GREENCODE_ADMIN_TOKEN in .env
 pip install -r requirements.txt
-cp .env.example .env                                    # edit if needed
-python scripts/init_db.py                               # creates the 8 tables + carbon factors
-python scripts/seed_bench_dataset.py                    # loads the controlled SQL dataset (schema `bench`)
-uvicorn app.main:app --reload --port 8000               # API + Swagger UI at http://localhost:8000/docs
+python scripts\init_db.py       # creates tables and seeds carbon factors
+python scripts\seed_bench_dataset.py   # loads the controlled SQL dataset (~850k rows)
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 ### 3. Dashboard
 
-```bash
+```powershell
 cd frontend
 npm install
-npm run dev                                             # http://localhost:5173 (proxies /api to :8000)
+npm run dev                     # http://localhost:5173
 ```
 
-### 4. Run the experiment
+### 4. Energy measurement
 
-```bash
-cd backend
-python scripts/run_suite.py --project "Experiment 1"            # all 30 cases × 2 conditions
-python scripts/run_suite.py --project smoke --cases py_001_membership_list_in_loop --conditions greencode
-python scripts/export_results.py --project "Experiment 1" --out ../results   # CSV/JSON for the dissertation
-```
+Start LibreHardwareMonitor **as Administrator**, then **Options → Remote Web
+Server → Run**. The backend polls `http://localhost:8085/data.json` and the
+dashboard sidebar shows **Energy: lhm**. Without it the sidebar shows
+**Energy: estimate** and energy figures are labelled as estimates.
 
-Or use the **Experiments** page in the dashboard, which runs the same code and
-shows per-case results, condition summaries and the H1–H4 tests live.
+### 5. Run the experiment
 
-### Windows
-
-Everything runs natively on Windows 10/11 (PowerShell):
+Use the **Experiments** page, or from the command line:
 
 ```powershell
-docker compose up -d postgres ollama
-docker compose exec ollama ollama pull qwen2.5-coder:7b
 cd backend
-py -3.12 -m venv .venv; .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-copy .env.example .env
-python scripts\init_db.py
-python scripts\seed_bench_dataset.py
-uvicorn app.main:app --reload --port 8000
+python scripts\run_suite.py --project "Experiment 1"
+python scripts\export_results.py --out results.csv
 ```
 
-and in a second terminal `cd frontend; npm install; npm run dev`.
+### Tests
 
-Differences on Windows: the sandbox cannot apply POSIX memory/CPU rlimits, so it
-relies on the timeout plus the worker-side hardening (no network, no subprocesses,
-no file writes). RAPL is unavailable; energy comes from CodeCarbon (which uses
-Intel Power Gadget / TDP on Windows) or the coefficient estimate. If
-`pip install codecarbon` fails, remove it from `requirements.txt` — the estimate
-is used automatically.
-
-### Offline / no GPU
-
-`GREENCODE_LLM_PROVIDER=mock` runs the entire pipeline with a deterministic stand-in
-model (it returns the original code), which is how the test-suite and CI work.
-
-```bash
-cd backend && pytest            # integration tests skip automatically if PostgreSQL is unreachable
+```powershell
+cd backend
+python -m pytest
 ```
 
 ---
@@ -163,22 +143,21 @@ cd backend && pytest            # integration tests skip automatically if Postgr
 3. **Optimise** – `ai.prompts.build_prompt()` produces the AI-only or GreenCode
    prompt; `OllamaProvider` calls the local model with `temperature=0`, fixed seed.
 4. **Test** – Python candidates run in `verification/worker.py`: a separate
-   `python -I` process with RLIMIT memory/CPU/file limits, a timeout, no network,
-   no subprocesses and read-only filesystem access to a temp directory. Outputs
-   are compared with the original's on every test input (differential testing),
-   including exception types and in-place mutation of arguments. SQL candidates
-   must be a single SELECT and return identical columns and rows on the
-   controlled dataset.
+   `python -I` process with a timeout, an empty environment, no network, no
+   subprocesses and a throw-away working directory. Outputs are compared with the
+   original's on every test input (differential testing), including exception
+   types and in-place mutation of arguments. SQL candidates must be a single
+   SELECT and return identical columns and rows on the controlled dataset.
 5. **Benchmark** – `benchmark/runner.py` performs warm-up runs then *N* timed
-   repetitions (default 15) and records every sample, not just the mean.
-6. **Measure** – CPU time and peak RSS (psutil/rusage); energy via RAPL when the
-   counters are readable (with an idle-power baseline subtracted), else
-   CodeCarbon, else a documented coefficient model. Every row in `measurements`
-   records `method = measured | estimated` and `source`.
+   repetitions (default 15; use 30+ for energy) and records every sample.
+6. **Measure** – CPU time and peak working set (psutil); energy from the
+   processor's RAPL counter via LibreHardwareMonitor (idle floor subtracted),
+   else CodeCarbon, else a documented coefficient model. Every row in
+   `measurements` records `method = measured | derived | estimated` and `source`.
 7. **Verify** – `stats.compare()` reports median speed-up, Mann–Whitney *p*,
    Cliff's δ and CI overlap; `results.summarise()` aggregates per condition and
    evaluates H1 (Fisher exact), H2/H3 (paired Wilcoxon on log ratios) and H4
-   (time-vs-energy divergence, Spearman ρ).
+   (time-vs-energy divergence).
 
 ## Rule catalogue
 
@@ -219,40 +198,41 @@ own tests and that the expected rules fire.
 
 All settings are environment variables prefixed `GREENCODE_` (see
 `backend/.env.example`): database URLs, provider/model, sandbox limits,
-repetitions/warm-up, energy method and the CPU TDP used by the estimate model.
-The environment snapshot (CPU, cores, Python version, settings) is stored with
-every benchmark run for reproducibility.
+repetitions/warm-up, energy method, the LibreHardwareMonitor URL and the CPU
+TDP used by the estimate model. The environment snapshot (CPU, cores, Python
+version, settings) is stored with every benchmark run.
 
-### Admin panel
+### Admin page
 
-The dashboard's **Admin** page (`#/admin`, API under `/api/admin/*`) is for the
-person running the experiment: evidence-store counts and host status, runtime
-overrides of benchmark/model/energy settings (process-only; a restart reverts to
-the environment, and every run records the values it used), Ollama model listing
-and pulls, carbon-factor management (values that evidence already references are
-locked), maintenance (mark stuck runs failed, delete orphan analyses or
-failed/rejected runs; benchmarked evidence is never deleted) and a CSV export of
-all results. The admin API always requires an `X-Admin-Token` header. Set
-`GREENCODE_ADMIN_TOKEN` to choose it; if unset, the backend generates a random
-token at every startup and prints it in its log, so the API is never open.
+The dashboard's **Admin** page (`#/admin`, API under `/api/admin/*`) shows
+evidence-store counts and host status, lets you override benchmark/model/energy
+settings at runtime (process-only; every run records the values it used), lists
+and pulls Ollama models, manages carbon factors (values that evidence already
+references are locked), offers maintenance actions (mark stuck runs failed,
+delete orphan analyses or failed/rejected runs; benchmarked evidence is never
+deleted), shows the server log and exports all results as CSV. The admin API
+always requires an `X-Admin-Token` header: set `GREENCODE_ADMIN_TOKEN` in
+`backend/.env`, or copy the random token the backend prints at startup.
 
 ## Measurement caveats (for the dissertation)
 
-* RAPL and CodeCarbon measure the **whole machine**; results are only comparable
-  within an interleaved original/candidate pair on an otherwise idle system.
-  Run experiments on the host, not inside Docker, so hardware counters are visible.
+* LibreHardwareMonitor and CodeCarbon measure the **whole machine** and refresh
+  about once a second; results are only comparable within an interleaved
+  original/candidate pair on an otherwise idle laptop, over windows of several
+  seconds. Close other applications during experiment runs.
 * The coefficient estimate (Green Algorithms) is an *estimate*; it is always
   stored alongside any measurement so the two can be compared (H4 discussion).
-* CO₂e uses the SEAI grid factor stored in `carbon_factors`; update it and cite
-  the release used.
-* The Python sandbox is defence-in-depth, not a security boundary (and has no
-  rlimits on Windows); run the backend in the provided container for untrusted inputs.
+* CO₂e uses the SEAI grid factor stored in `carbon_factors`; cite the release used.
+* The Python sandbox is defence-in-depth, not a security boundary. Only run
+  code you are prepared to execute on your own machine.
 
 ## Documentation
 
-* `docs/methodology.md` – experimental protocol, statistics and threats to validity
+* `docs/methodology.md` – experimental protocol, energy measurement, statistics, threats to validity
 * `docs/architecture.md` – component responsibilities and data model
-* `docs/design-skills.md` – the design skills in `.claude/skills/` used for the dashboard UI
+* `docs/ui-audit.md` – usability review of the dashboard (Nielsen heuristics)
+* `docs/diagrams/` – flowchart, use case and class diagrams; `docs/plan/` – Gantt chart
+* `docs/references/` – BibTeX reference library for Zotero
 * API reference: `http://localhost:8000/docs`
 
 ## Acknowledgement of AI assistance
@@ -260,8 +240,3 @@ token at every startup and prints it in its log, so the API is never open.
 The codebase was generated with Claude (Anthropic) under the author's direction
 from the project proposal, and is declared as such in line with TU Dublin's
 policy on AI use. Commit messages carry a co-author line for every AI-generated change.
-
-Dashboard design work is additionally guided by third-party Claude skills (Impeccable,
-Taste skill, Emil Kowalski's design skills and a Nielsen heuristics audit) stored in
-`.claude/skills/` with their licences; see `docs/design-skills.md`. `CLAUDE.md` tells Claude Code
-how to use them in this repo.

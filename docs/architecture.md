@@ -18,7 +18,7 @@ projects 1─n analyses 1─n findings
 * `benchmark_runs.variant` ∈ {`original`, `candidate`} — the Baseline condition is
   the `original` run.
 * `measurements.method` ∈ {`measured`, `estimated`} and `source` ∈ {`psutil`,
-  `postgresql`, `rapl`, `codecarbon`, `estimate`}.
+  `postgresql`, `lhm`, `codecarbon`, `estimate`}.
 
 ## Sandbox (`backend/app/verification/`)
 
@@ -56,4 +56,4 @@ canonicalise outputs) and `benchmark` (warm-up, timed repetitions, rusage).
 Vite + React + TypeScript, no UI framework: `src/api.ts` (typed client),
 `src/pages/*` (Overview, Projects, Analyse, Optimisation, Experiments, Rules),
 `src/components/charts.tsx` (dependency-free SVG charts). Hash routing keeps the
-build static so it can be served by nginx in Docker.
+build static (`npm run build`) if it ever needs to be served without Vite.

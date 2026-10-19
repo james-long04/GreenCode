@@ -48,7 +48,7 @@ that guidance.
 
 | Method | Type | What it covers | Caveats |
 |---|---|---|---|
-| RAPL (`/sys/class/powercap`) | measured | CPU package (+ DRAM where exposed) | machine-wide; idle baseline measured for 1 s and subtracted; root/privileged read on most kernels; Intel/AMD Linux only |
+| LibreHardwareMonitor (RAPL via signed driver) | measured | CPU package | machine-wide; 6 s idle floor subtracted; ~1 s refresh; Intel, Windows |
 | CodeCarbon | measured/estimated | CPU (RAPL or TDP), RAM, GPU | 1 s sampling interval, coarse for sub-second workloads |
 | Coefficient estimate | estimated | CPU time × (TDP / cores) + wall × RAM × 0.3725 W/GB, × PUE | Green Algorithms model; TDP must be set for the test machine |
 
@@ -67,31 +67,25 @@ alongside every measurement so measured and estimated figures can be compared.
   raw model response and all raw samples, so a result can be re-examined or reproduced.
 
 
-## Energy measurement on Windows (LibreHardwareMonitor or Intel PCM)
+## Energy measurement (LibreHardwareMonitor)
 
-The Linux powercap interface does not exist on Windows, so on the development laptop
-(Intel Core Ultra 5 135U) GreenCode reads the same RAPL counters through a third-party
-driver. The default route is LibreHardwareMonitor, which ships a signed kernel driver and
-exposes "CPU Package" power as JSON from its built-in web server. LHM refreshes about once a
-second and a reading observed at time *u* is the mean power over the preceding refresh
-interval, so the meter keeps polling until the first refresh after the window closes and
-integrates each reading over the part of its interval that overlaps the window. The number
-of distinct readings and the coverage fraction are stored with each measurement; a six-second
-idle baseline is taken once per session. CO₂e derived from a measured energy value is tagged
-"derived" rather than "estimated", since only the grid factor is modelled. The alternative is Intel
-Performance Counter Monitor, which gives per-sample energy directly but requires
-compiling and test-signing its MSR driver on Windows. `pcm.exe` runs as a background sampler at 100 ms for
-the duration of each benchmark window; package and DRAM energy per sample are summed
-and scaled by the fraction of the window the samples cover, and the coverage ratio is
-stored with the measurement. Because the sampler is machine-wide, a two-second idle
-baseline is recorded once per session and subtracted, as for RAPL on Linux.
+GreenCode runs on a Windows laptop (Intel Core Ultra 5 135U). It reads the processor's RAPL
+energy counter through LibreHardwareMonitor, which ships a signed kernel driver and exposes
+"CPU Package" power as JSON from its built-in web server. LHM refreshes about once a second and
+a reading observed at time *u* is the mean power over the preceding refresh interval, so the
+meter keeps polling until the first refresh after the window closes and integrates each reading
+over the part of its interval that overlaps the window. The number of distinct readings and the
+coverage fraction are stored with each measurement. A six-second idle baseline is taken once per
+session and its lowest steady reading is subtracted as the idle floor. CO₂e derived from a
+measured energy value is tagged "derived" rather than "estimated", since only the grid factor
+is modelled. The coefficient estimate is always recorded alongside so the two can be compared (H4).
 
-Limitations to report: sampling granularity is coarse relative to millisecond
-benchmarks, so per-run energy should be read at the level of the whole repetition
-loop, not individual samples; PCM requires its kernel driver and an administrator
-shell; and it is Intel-only. The coefficient estimate is still recorded alongside
-every PCM measurement so the two can be compared (H4).
+Limitations to report: one-second granularity is coarse relative to millisecond benchmarks, so
+energy is only meaningful over the whole repetition loop (use 30+ repetitions); the reading is
+machine-wide, so other applications must be closed during runs; and the approach is specific to
+Intel processors with LHM support.
 
-Precedent: Bachras and Jacobsen, "Beyond Performance: Measuring the Environmental
-Impact of Analytical Databases" (arXiv:2504.18980, 2025) use RAPL package and DRAM
-energy multiplied by regional grid intensity in the same way.
+Alternatives considered: Intel PCM gives 100 ms samples but requires compiling and test-signing
+its MSR driver on Windows; CodeCarbon reads RAPL natively only on Linux and otherwise estimates
+from CPU load. Precedent for RAPL package energy × regional grid intensity: Bachras and Jacobsen,
+"Beyond Performance: Measuring the Environmental Impact of Analytical Databases" (arXiv:2504.18980, 2025).

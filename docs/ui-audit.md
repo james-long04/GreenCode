@@ -1,6 +1,6 @@
 # UI design pass: audit
 
-Applied with the skills in `.claude/skills/` (Impeccable in Operate mode, Nielsen's heuristics, Emil Kowalski's motion rules, Taste). Context is in `PRODUCT.md`.
+Applied using Nielsen's ten usability heuristics, Impeccable's craft checklist (restrained colour, scanability, one container level) and Emil Kowalski's motion rules.
 Severity uses Nielsen's 0–4 scale.
 
 | # | Heuristic | Problem in the old UI | Sev | Fix |

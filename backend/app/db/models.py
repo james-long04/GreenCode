@@ -203,7 +203,7 @@ class Measurement(Base):
     value: Mapped[float] = mapped_column(Float, nullable=False)
     unit: Mapped[str] = mapped_column(String(32), nullable=False)
     method: Mapped[str] = mapped_column(String(32), default="measured")  # measured | estimated
-    source: Mapped[str] = mapped_column(String(64), default="")  # psutil | rapl | codecarbon | ...
+    source: Mapped[str] = mapped_column(String(64), default="")  # psutil | lhm | codecarbon | estimate | postgresql
     carbon_factor_id: Mapped[str | None] = mapped_column(ForeignKey("carbon_factors.id"))
     details: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)

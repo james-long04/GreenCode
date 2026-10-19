@@ -34,7 +34,7 @@ def _geomean(xs: list[float]) -> float | None:
 
 def _primary_energy(summary: dict[str, Any]) -> dict[str, Any] | None:
     energy = summary.get("energy") or {}
-    for key in ("rapl", "codecarbon", "estimate"):
+    for key in ("lhm", "codecarbon", "estimate"):
         if key in energy:
             return {"source": key, **energy[key]}
     return None

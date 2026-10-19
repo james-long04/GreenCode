@@ -1,6 +1,6 @@
 """GreenCode API — FastAPI application entry point.
 
-Run locally with:  uvicorn app.main:app --reload --port 8000
+Run locally with:  python -m uvicorn app.main:app --reload --port 8000
 """
 
 from __future__ import annotations

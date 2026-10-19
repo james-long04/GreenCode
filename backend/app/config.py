@@ -51,10 +51,8 @@ class Settings(BaseSettings):
     # --- energy / carbon -------------------------------------------------
     energy_method: str = Field(
         default="auto",
-        description="auto | rapl | pcm | lhm | codecarbon | estimate. 'auto' picks the best available.",
+        description="auto | lhm | codecarbon | estimate. 'auto' picks the best available.",
     )
-    # Path to Intel PCM's pcm.exe (Windows). Unset means search PATH.
-    pcm_path: str | None = None
     # LibreHardwareMonitor web server (Windows). Enable it in LHM: Options > Remote Web Server > Run.
     lhm_url: str = "http://localhost:8085/data.json"
     carbon_factor_region: str = "IE"
@@ -76,7 +74,7 @@ class Settings(BaseSettings):
 RUNTIME_ADJUSTABLE: frozenset[str] = frozenset({
     "llm_provider", "ollama_model", "ollama_base_url", "llm_temperature", "llm_seed",
     "benchmark_warmup_runs", "benchmark_repetitions", "benchmark_timeout_seconds",
-    "energy_method", "pcm_path", "lhm_url", "carbon_factor_region", "estimate_cpu_tdp_watts", "estimate_pue",
+    "energy_method", "lhm_url", "carbon_factor_region", "estimate_cpu_tdp_watts", "estimate_pue",
     "sandbox_timeout_seconds", "sandbox_memory_limit_mb",
 })
 
