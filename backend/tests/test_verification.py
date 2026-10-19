@@ -1,3 +1,5 @@
+import os
+
 from app.verification.python_verifier import static_safety_check, verify_python
 from app.verification.sandbox import run_job
 
@@ -57,8 +59,9 @@ def test_sandbox_blocks_network_subprocess_and_file_writes():
 def test_sandbox_timeout_and_memory_limit():
     r = run_job({"mode": "verify", "source": "def solve():\n    while True: pass", "entry_point": "solve", "tests": [{"name": "a", "args": "()"}]}, timeout=2)
     assert r.failure_type == "timeout"
-    r = run_job({"mode": "verify", "source": "def solve():\n    return len(bytearray(10**10))", "entry_point": "solve", "tests": [{"name": "a", "args": "()"}]})
-    assert (not r.ok) or r.data["tests"][0]["error_type"] == "MemoryError"
+    if os.name != "nt":  # the memory limit is enforced with rlimits, which Windows does not have
+        r = run_job({"mode": "verify", "source": "def solve():\n    return len(bytearray(10**10))", "entry_point": "solve", "tests": [{"name": "a", "args": "()"}]})
+        assert (not r.ok) or r.data["tests"][0].get("error_type") == "MemoryError"
 
 
 def test_benchmark_mode_returns_samples():

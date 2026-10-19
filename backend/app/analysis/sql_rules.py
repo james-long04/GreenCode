@@ -129,7 +129,14 @@ def _check_select(s: exp.Select, findings: list[Finding], is_root: bool) -> None
 
     # SQL008 implicit cross join: FROM a, b with no join and no WHERE linking them
     if from_ is not None and isinstance(from_.this, exp.Table):
-        extra = [j for j in joins if j.args.get("on") is None and j.args.get("using") is None and not j.args.get("kind")]
+        def _unconditioned(j: exp.Join) -> bool:
+            kind = str(j.args.get("kind") or "").upper()
+            return (j.args.get("on") is None and j.args.get("using") is None
+                    and kind in ("", "CROSS") and not j.args.get("side"))
+
+        # Comma joins arrive as Join nodes in newer sqlglot and as extra FROM expressions in older ones.
+        extra = [j for j in joins if _unconditioned(j)]
+        extra += [e for e in (from_.expressions or []) if isinstance(e, exp.Table)]
         if extra:
             where = s.args.get("where")
             if where is None:
