@@ -115,7 +115,7 @@ def _check_select(s: exp.Select, findings: list[Finding], is_root: bool) -> None
               "I/O, more memory for sorts/hashes and no chance of an index-only scan.",
               "List only the columns that are actually needed.", node=s, confidence=0.9)
 
-    from_ = s.args.get("from")
+    from_ = s.args.get("from") or s.args.get("from_")  # key renamed to "from_" in sqlglot 30
     tables = list(s.find_all(exp.Table))
     joins = s.args.get("joins") or []
 
