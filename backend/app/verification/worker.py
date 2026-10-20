@@ -17,7 +17,7 @@ Job format::
 Defence in depth: the parent applies a timeout, an empty
 environment and a throw-away working directory; this worker additionally
 disables the obvious escape hatches (network, subprocesses, writing files).
-Docker (see docker-compose.yml) is the recommended outer boundary.
+The sandbox is defence in depth, not a security boundary: only run code you would run on your own machine.
 """
 
 from __future__ import annotations
