@@ -1583,3 +1583,18 @@ details.disclosure > .disclosure-body {
     transform: none;
   }
 }
+
+/* File picker on the Analyse page: a label styled as a button wrapping a visually hidden input */
+.btn-file {
+  align-self: end;
+  position: relative;
+}
+.btn-file:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+textarea.drop-target {
+  border-color: var(--accent);
+  border-style: dashed;
+  background: var(--accent-soft, var(--surface-2));
+}

@@ -45,6 +45,40 @@ function specProblem(text: string): string | null {
   }
 }
 
+const ACCEPTED = ".py,.sql,.ipynb,.txt";
+
+/** Turn a Jupyter notebook (JSON) into one Python module: code cells only, IPython magics dropped. */
+function notebookToPython(text: string): { source: string; cells: number; dropped: number } {
+  const nb = JSON.parse(text) as { cells?: { cell_type: string; source: string | string[] }[] };
+  if (!Array.isArray(nb.cells)) throw new Error("This file is not a Jupyter notebook (no cells array).");
+  const parts: string[] = [];
+  let cells = 0;
+  let dropped = 0;
+  for (const cell of nb.cells) {
+    if (cell.cell_type !== "code") continue;
+    const body = Array.isArray(cell.source) ? cell.source.join("") : cell.source;
+    const kept: string[] = [];
+    for (const line of body.split("\n")) {
+      const t = line.trimStart();
+      // %magic, %%cell-magic and !shell lines are IPython-only and not valid Python.
+      if (t.startsWith("%") || t.startsWith("!")) { dropped++; continue; }
+      kept.push(line);
+    }
+    if (kept.join("").trim() === "") continue;
+    cells++;
+    parts.push(`# --- cell ${cells} ---\n${kept.join("\n").replace(/\s+$/, "")}`);
+  }
+  if (cells === 0) throw new Error("The notebook has no code cells.");
+  return { source: parts.join("\n\n") + "\n", cells, dropped };
+}
+
+function languageFor(fileName: string): Language | null {
+  const ext = fileName.toLowerCase().split(".").pop();
+  if (ext === "py" || ext === "ipynb") return "python";
+  if (ext === "sql") return "sql";
+  return null;
+}
+
 /** Submit code for static analysis, then launch optimisations under either condition. */
 export function AnalysePage({ projectId, navigate }: { projectId: string | null; navigate: (p: string) => void }) {
   const [language, setLanguage] = useState<Language>("python");
@@ -53,6 +87,8 @@ export function AnalysePage({ projectId, navigate }: { projectId: string | null;
   const [spec, setSpec] = useState(JSON.stringify(PY_SPEC, null, 2));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
 
   const problem = useMemo(() => (language === "python" ? specProblem(spec) : null), [language, spec]);
   const canSubmit = !!projectId && !!source.trim() && !problem && !busy;
@@ -60,6 +96,29 @@ export function AnalysePage({ projectId, navigate }: { projectId: string | null;
   const switchLanguage = (l: Language) => {
     setLanguage(l);
     setSource(l === "python" ? PY_EXAMPLE : SQL_EXAMPLE);
+    setLoaded(null);
+  };
+
+  const loadFile = async (file: File) => {
+    setErr(null);
+    try {
+      const text = await file.text();
+      const lang = languageFor(file.name) ?? language;
+      let body = text;
+      let note = `Loaded ${file.name}`;
+      if (file.name.toLowerCase().endsWith(".ipynb")) {
+        const nb = notebookToPython(text);
+        body = nb.source;
+        note += ` – ${nb.cells} code cell${nb.cells === 1 ? "" : "s"} joined into one module`;
+        if (nb.dropped) note += `, ${nb.dropped} IPython magic/shell line${nb.dropped === 1 ? "" : "s"} removed`;
+      }
+      setLanguage(lang);
+      setSource(body);
+      setName(file.name.replace(/\.[^.]+$/, ""));
+      setLoaded(note + (lang === "python" ? ". Check the entry point and tests below match the file." : "."));
+    } catch (e) {
+      setErr(`Could not load ${file.name}: ${e instanceof Error ? e.message : String(e)}`);
+    }
   };
 
   const submit = async () => {
@@ -126,6 +185,20 @@ export function AnalysePage({ projectId, navigate }: { projectId: string | null;
                 Name
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} style={{ minWidth: 240 }} />
               </label>
+              <label className="btn btn-file">
+                <Icon name="folders" size={16} />
+                Open file…
+                <input
+                  type="file"
+                  accept={ACCEPTED}
+                  className="sr-only"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void loadFile(f);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
             </div>
             <div className="row">
               <span className="muted small">
@@ -147,12 +220,28 @@ export function AnalysePage({ projectId, navigate }: { projectId: string | null;
             </span>
             <textarea
               value={source}
-              onChange={(e) => setSource(e.target.value)}
+              onChange={(e) => { setSource(e.target.value); setLoaded(null); }}
               onKeyDown={onKey}
               spellCheck={false}
+              className={dragging ? "drop-target" : ""}
+              onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragging(false);
+                const f = e.dataTransfer.files?.[0];
+                if (f) void loadFile(f);
+              }}
               aria-label={language === "python" ? "Python source" : "SQL source"}
             />
+            <span className="help">Or drop a .py, .sql or .ipynb file here. Notebooks are flattened to their code cells.</span>
           </label>
+          {loaded && (
+            <div className="alert info" role="status">
+              <Icon name="check" className="alert-icon" />
+              <div className="alert-body">{loaded}</div>
+            </div>
+          )}
 
           {language === "python" && (
             <details className="disclosure">
