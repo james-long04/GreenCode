@@ -230,6 +230,7 @@ always requires an `X-Admin-Token` header: set `GREENCODE_ADMIN_TOKEN` in
 
 * `docs/methodology.md` – experimental protocol, energy measurement, statistics, threats to validity
 * `docs/architecture.md` – component responsibilities and data model
+* `vault/GreenCode/` – Obsidian vault with every note about the project (open `00 Home.md`)
 * `docs/GreenCode-How-The-Code-Works.docx` – developer walkthrough of every package, the data model and the dashboard
 * `docs/ui-audit.md` – usability review of the dashboard (Nielsen heuristics)
 * `docs/diagrams/` – flowchart, use case and class diagrams; `docs/plan/` – Gantt chart

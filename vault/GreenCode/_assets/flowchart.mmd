@@ -1,0 +1,16 @@
+flowchart TD
+    A([Developer submits Python or SQL]) --> B[Static analysis<br/>fixed rule catalogue]
+    B --> C{Findings?}
+    C -- "AI-only condition" --> D[Prompt: code only]
+    C -- "GreenCode condition" --> E[Prompt: code + structured findings]
+    D --> F[Local LLM via Ollama<br/>generates candidate]
+    E --> F
+    F --> G[Sandbox verification<br/>correctness tests]
+    G --> H{Tests pass?}
+    H -- No --> I[Reject candidate<br/>record failure reason]
+    H -- Yes --> J[Benchmark original vs candidate<br/>warm-up + repeated runs]
+    J --> K[Measure energy and CO2e<br/>RAPL / CodeCarbon / estimate]
+    K --> L[Statistics<br/>Mann-Whitney, Cliff's delta]
+    L --> M[(PostgreSQL evidence store)]
+    I --> M
+    M --> N([Dashboard: verdict, speed-up,<br/>energy, hypotheses H1-H4])

@@ -17,15 +17,15 @@ projects 1─n analyses 1─n findings
   evidence remains in the child tables.
 * `benchmark_runs.variant` ∈ {`original`, `candidate`} — the Baseline condition is
   the `original` run.
-* `measurements.method` ∈ {`measured`, `estimated`} and `source` ∈ {`psutil`,
+* `measurements.method` ∈ {`measured`, `derived`, `estimated`} and `source` ∈ {`psutil`,
   `postgresql`, `lhm`, `codecarbon`, `estimate`}.
 
 ## Sandbox (`backend/app/verification/`)
 
 `sandbox.run_job()` starts `python -I -B worker.py` with:
 
-* RLIMIT_AS (memory), RLIMIT_CPU, RLIMIT_FSIZE, RLIMIT_NPROC, RLIMIT_CORE
-* a wall-clock timeout, a throw-away cwd, a minimal environment
+* a wall-clock timeout, a throw-away cwd and an essentially empty environment
+  (no POSIX rlimits — the project runs natively on Windows)
 * `worker._harden()` blocks `socket`, `subprocess`, `ctypes`, … via `sys.modules`,
   neuters `os.system/fork/exec/remove…`, and replaces `open` with a read-only,
   cwd-restricted version.
@@ -54,6 +54,6 @@ canonicalise outputs) and `benchmark` (warm-up, timed repetitions, rusage).
 ## Frontend (`frontend/`)
 
 Vite + React + TypeScript, no UI framework: `src/api.ts` (typed client),
-`src/pages/*` (Overview, Projects, Analyse, Optimisation, Experiments, Rules),
+`src/pages/*` (Overview, Projects, Analyse, Optimisation, Experiments, Rules, Admin),
 `src/components/charts.tsx` (dependency-free SVG charts). Hash routing keeps the
 build static (`npm run build`) if it ever needs to be served without Vite.
