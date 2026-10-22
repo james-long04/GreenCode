@@ -3,6 +3,10 @@
 H1  correctness rate (verified / generated) per condition      → Fisher's exact test
 H2  execution-time improvement per condition (verified only)   → paired Wilcoxon on log speed-up
 H3  energy improvement per condition (verified only)           → paired Wilcoxon on energy ratio
+    H2/H3 are reported twice: per-protocol (the pre-registered test, which
+    sets ``supported``) and intention-to-treat (a rejected/failed candidate
+    scores 1.0, i.e. no improvement delivered), aggregated by the median of
+    repeated runs per case.
 H4  time reduction ≠ energy reduction                          → per-case divergence + Spearman ρ
 """
 
@@ -123,11 +127,52 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
                             for lang in sorted({r["language"] for r in rows})} if rows and len({r["language"] for r in rows}) > 1 else {}}
 
 
-def _paired(by_cond: dict[str, list[dict[str, Any]]], key: str) -> tuple[list[float], list[float]]:
-    a = {r["case_id"] or r["analysis_id"]: r[key] for r in by_cond.get("ai_only", []) if r.get(key)}
-    b = {r["case_id"] or r["analysis_id"]: r[key] for r in by_cond.get("greencode", []) if r.get(key)}
+def _paired(by_cond: dict[str, list[dict[str, Any]]], key: str, *,
+            intention_to_treat: bool = False) -> tuple[list[float], list[float], list[str]]:
+    """Per-case paired values for the two conditions.
+
+    A case may have been run several times; the *median* over its benchmarked
+    runs is used so that repeated runs are aggregated rather than one of them
+    silently winning. In the per-protocol analysis (default) a case only
+    counts when it was benchmarked under both conditions. In the
+    intention-to-treat analysis a condition whose candidates were all
+    rejected or failed scores 1.0 (no improvement delivered), so the cases
+    where one condition produced nothing usable are kept in the comparison.
+    """
+    def per_case(rows: list[dict[str, Any]]) -> dict[str, float]:
+        values: dict[str, list[float]] = defaultdict(list)
+        attempted: set[str] = set()
+        for r in rows:
+            cid = r["case_id"] or r["analysis_id"]
+            attempted.add(cid)
+            if r.get("status") == "benchmarked" and r.get(key):
+                values[cid].append(float(r[key]))
+        out = {cid: statistics.median(v) for cid, v in values.items()}
+        if intention_to_treat:
+            for cid in attempted - set(out):
+                out[cid] = 1.0
+        return out
+
+    a = per_case(by_cond.get("ai_only", []))
+    b = per_case(by_cond.get("greencode", []))
     keys = sorted(set(a) & set(b))
-    return [a[k] for k in keys], [b[k] for k in keys]
+    return [a[k] for k in keys], [b[k] for k in keys], keys
+
+
+def _paired_test(by_cond: dict[str, list[dict[str, Any]]], key: str, *, intention_to_treat: bool) -> dict[str, Any]:
+    a, b, keys = _paired(by_cond, key, intention_to_treat=intention_to_treat)
+    out: dict[str, Any] = {"paired_cases": len(a), "ai_only_geomean": _geomean(a), "greencode_geomean": _geomean(b),
+                           "greencode_better": sum(1 for x, y in zip(a, b) if y > x * 1.1),
+                           "ai_only_better": sum(1 for x, y in zip(a, b) if x > y * 1.1)}
+    out["ties"] = out["paired_cases"] - out["greencode_better"] - out["ai_only_better"]
+    if _st is not None and len(a) >= 5:
+        try:
+            out["wilcoxon_p"] = float(_st.wilcoxon([math.log(y) for y in b], [math.log(x) for x in a],
+                                                   alternative="greater").pvalue)
+        except ValueError:
+            out["wilcoxon_p"] = None
+    out["supported"] = (out["greencode_geomean"] or 0) > (out["ai_only_geomean"] or 0) and (out.get("wilcoxon_p") or 1) < 0.05
+    return out
 
 
 def _hypotheses(by_cond: dict[str, list[dict[str, Any]]], conditions: dict[str, Any]) -> dict[str, Any]:
@@ -145,27 +190,13 @@ def _hypotheses(by_cond: dict[str, list[dict[str, Any]]], conditions: dict[str, 
     h1["supported"] = (h1["greencode_rate"] or 0) > (h1["ai_only_rate"] or 0) and (h1.get("fisher_p") or 1) < 0.05
     out["H1"] = h1
 
-    # H2 speed-up (paired on cases benchmarked under both conditions)
-    a, b = _paired(by_cond, "speedup")
-    h2: dict[str, Any] = {"paired_cases": len(a), "ai_only_geomean": _geomean(a), "greencode_geomean": _geomean(b)}
-    if _st is not None and len(a) >= 5:
-        try:
-            h2["wilcoxon_p"] = float(_st.wilcoxon([math.log(y) for y in b], [math.log(x) for x in a], alternative="greater").pvalue)
-        except ValueError:
-            h2["wilcoxon_p"] = None
-    h2["supported"] = (h2["greencode_geomean"] or 0) > (h2["ai_only_geomean"] or 0) and (h2.get("wilcoxon_p") or 1) < 0.05
-    out["H2"] = h2
-
-    # H3 energy ratio
-    a, b = _paired(by_cond, "energy_ratio")
-    h3: dict[str, Any] = {"paired_cases": len(a), "ai_only_geomean": _geomean(a), "greencode_geomean": _geomean(b)}
-    if _st is not None and len(a) >= 5:
-        try:
-            h3["wilcoxon_p"] = float(_st.wilcoxon([math.log(y) for y in b], [math.log(x) for x in a], alternative="greater").pvalue)
-        except ValueError:
-            h3["wilcoxon_p"] = None
-    h3["supported"] = (h3["greencode_geomean"] or 0) > (h3["ai_only_geomean"] or 0) and (h3.get("wilcoxon_p") or 1) < 0.05
-    out["H3"] = h3
+    # H2 speed-up, H3 energy ratio. Primary (per-protocol): cases verified and
+    # benchmarked under both conditions. Secondary (intention-to-treat): a
+    # condition that produced no usable candidate scores 1.0.
+    for name, key in (("H2", "speedup"), ("H3", "energy_ratio")):
+        primary = _paired_test(by_cond, key, intention_to_treat=False)
+        primary["intention_to_treat"] = _paired_test(by_cond, key, intention_to_treat=True)
+        out[name] = primary
 
     # H4 time vs energy
     pairs = [(r["time_percent_change"], r["energy_percent_change"]) for rs in by_cond.values() for r in rs

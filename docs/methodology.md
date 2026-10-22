@@ -36,9 +36,17 @@ that guidance.
 * Per pair: median, mean, SD, 95 % CI (t-distribution), Mann–Whitney U (two-sided,
   α = 0.05), Cliff's δ, speed-up = median_original / median_candidate.
 * H1: proportion verified, one-sided Fisher exact test (GreenCode > AI-only).
-* H2 / H3: paired on cases benchmarked under both conditions; one-sided Wilcoxon
-  signed-rank on log(speed-up) / log(energy ratio). Geometric means are reported
-  because ratios are multiplicative.
+* H2 / H3: paired per case; one-sided Wilcoxon signed-rank on log(speed-up) /
+  log(energy ratio). Geometric means are reported because ratios are multiplicative.
+  Repeated runs of a case are aggregated by their median before pairing. Two
+  analyses are reported: **per-protocol** (only cases verified and benchmarked
+  under both conditions; this is the pre-registered test and sets the verdict)
+  and **intention-to-treat** (every attempted case; a condition whose candidate
+  was rejected or failed scores 1.0, i.e. no improvement delivered). The two can
+  disagree: when guidance mainly prevents *wrong* rewrites, those cases leave the
+  per-protocol comparison and count towards H1 instead, while the
+  intention-to-treat view keeps them. Both are shown on the dashboard and in
+  `summary.json`.
 * H4: |Δtime% − Δenergy%| per case; count of cases diverging by > 10 pp; Spearman ρ
   between the two.
 * Results are exported with `scripts/export_results.py` (long-format CSV of every

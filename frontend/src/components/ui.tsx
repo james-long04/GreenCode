@@ -204,6 +204,8 @@ const GLOSSARY: Record<string, string> = {
   measured: "Read from hardware energy counters or CodeCarbon, not modelled.",
   derived: "Calculated from a measured value and a documented factor, for example measured joules × the grid carbon factor.",
   co2e: "Grams of CO₂ equivalent, from energy × the grid carbon factor stored for the region.",
+  "per-protocol": "Only cases where both conditions produced a verified, benchmarked candidate are compared. This is the pre-registered test.",
+  itt: "Intention-to-treat: every attempted case is compared; a condition whose candidate was rejected or failed scores 1.0× (no improvement delivered).",
 };
 
 /** Dotted-underline term with a native tooltip, for jargon that a reader may not know. */

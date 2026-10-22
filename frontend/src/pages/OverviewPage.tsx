@@ -291,18 +291,31 @@ const HYP_TEXT: Record<string, string> = {
 
 export function HypothesisList({ summary }: { summary: ResultsSummary }) {
   const h = summary.hypotheses;
+  const paired = (d: Record<string, unknown>, what: string) =>
+    `${d.paired_cases} paired cases · geomean ${what} ${fmt.x(d.ai_only_geomean as number)} vs ${fmt.x(d.greencode_geomean as number)} · ` +
+    `${d.greencode_better ?? 0} GreenCode better, ${d.ai_only_better ?? 0} AI-only better, ${d.ties ?? 0} within ±10 % · Wilcoxon ${fmt.p(d.wilcoxon_p as number)}`;
   const detail = (id: keyof typeof h) => {
     const d = h[id] as Record<string, number | boolean | null | undefined>;
     switch (id) {
       case "H1":
         return `AI-only ${fmt.rate(d.ai_only_rate as number)} vs GreenCode ${fmt.rate(d.greencode_rate as number)} · Fisher ${fmt.p(d.fisher_p as number)}`;
       case "H2":
-        return `${d.paired_cases} paired cases · geomean speed-up ${fmt.x(d.ai_only_geomean as number)} vs ${fmt.x(d.greencode_geomean as number)} · Wilcoxon ${fmt.p(d.wilcoxon_p as number)}`;
+        return paired(d, "speed-up");
       case "H3":
-        return `${d.paired_cases} paired cases · geomean energy ratio ${fmt.x(d.ai_only_geomean as number)} vs ${fmt.x(d.greencode_geomean as number)} · Wilcoxon ${fmt.p(d.wilcoxon_p as number)}`;
+        return paired(d, "energy ratio");
       case "H4":
         return `${d.cases} cases · median |Δtime − Δenergy| ${fmt.num(d.median_divergence_pp as number, 1)} pp · ${d.cases_diverging_over_10pp ?? 0} diverge by more than 10 pp · Spearman ρ ${fmt.num(d.spearman_rho as number)} (${fmt.p(d.spearman_p as number)})`;
     }
+  };
+  const itt = (id: "H2" | "H3") => {
+    const d = (h[id] as unknown as { intention_to_treat?: Record<string, unknown> }).intention_to_treat;
+    if (!d) return null;
+    return (
+      <div className="hyp-stats">
+        <Term id="itt">Intention-to-treat</Term>: {paired(d, id === "H2" ? "speed-up" : "energy ratio")}{" "}
+        <Badge kind={d.supported ? "ok" : "warn"}>{d.supported ? "supported" : "not supported"}</Badge>
+      </div>
+    );
   };
   return (
     <div className="divided">
@@ -311,14 +324,16 @@ export function HypothesisList({ summary }: { summary: ResultsSummary }) {
           <div className="hyp-id">{id}</div>
           <div>
             <div className="hyp-text">{HYP_TEXT[id]}</div>
-            <div className="hyp-stats">{detail(id)}</div>
+            <div className="hyp-stats">{id === "H2" || id === "H3" ? <><Term id="per-protocol">Per-protocol</Term>: </> : null}{detail(id)}</div>
+            {id === "H2" || id === "H3" ? itt(id) : null}
           </div>
           <Badge kind={h[id].supported ? "ok" : "warn"}>{h[id].supported ? "Supported so far" : "Not supported yet"}</Badge>
         </div>
       ))}
       <div className="muted small" style={{ paddingTop: 12 }}>
-        H2 and H3 use a one-sided paired <Term id="wilcoxon">Wilcoxon</Term> test on log ratios (needs at least 5 paired cases). H1 uses a one-sided{" "}
-        <Term id="fisher">Fisher exact</Term> test.
+        H2 and H3 use a one-sided paired <Term id="wilcoxon">Wilcoxon</Term> test on log ratios (needs at least 5 paired cases), with repeated runs of a case
+        aggregated by their median. The per-protocol test (verified under both conditions) decides the verdict; the intention-to-treat line scores a
+        rejected or failed candidate as 1.0×, since it delivers no improvement. H1 uses a one-sided <Term id="fisher">Fisher exact</Term> test.
       </div>
     </div>
   );

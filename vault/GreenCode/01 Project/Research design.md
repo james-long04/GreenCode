@@ -35,6 +35,9 @@ Within-subjects: every case is evaluated under both conditions on the same machi
 ## Per-pair statistics (`benchmark/stats.py`)
 median, mean, SD, 95 % CI (t), Mann–Whitney U (two-sided, α = 0.05), Cliff's δ, speed-up = median_original / median_candidate. Geometric means for ratios.
 
+## Per-protocol vs intention-to-treat (H2/H3)
+Repeated runs of a case are aggregated by median. **Per-protocol** = only cases verified under both conditions (sets the verdict). **Intention-to-treat** = every attempted case, a rejected/failed candidate scores 1.0×. When guidance mainly prevents wrong rewrites, those cases leave the per-protocol comparison (they count towards H1) — on the 22 Oct data H2 was p = 0.17 per-protocol and p = 0.026 intention-to-treat; H3 p = 0.37 / 0.07.
+
 ## Failure taxonomy
 Candidates that fail verification are not benchmarked; the failure type is a result in its own right: `parse_error`, `unsafe`, `compile_error`, `runtime_error`, `wrong_output`, `timeout`, `resource_limit`, `sql_error`.
 
