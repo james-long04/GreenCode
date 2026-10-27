@@ -44,7 +44,15 @@ Raasveldt et al.'s *Fair Benchmarking Considered Difficult* [39] lists the ways 
 
 Ferreira's TU Dublin dissertation [23] is a useful local warning: the same JavaScript benchmarks moved substantially when only the environment configuration changed. The environment snapshot, the single-machine rule and the paired design are my answer to that. A recent comparison of raw SQL against an ORM on PostgreSQL [40] measured CPU, memory and execution time across a fixed set of query patterns, which is close to my own design and reinforces that execution time alone is not a sufficient metric.
 
-## 6. Limitations I will report
+## 7. Precedents from theses and recent studies
+
+I looked for prior work that benchmarks in the way I do, with a preference for Irish theses. Yang's DCU doctoral thesis [41] is the closest Irish precedent on method: it argues that benchmark results are only comparable when the features being measured are fixed and declared in advance, and builds an explicit evaluation methodology around that, which is the same reasoning behind GreenCode's fixed rule catalogue, fixed dataset and stored environment snapshot. Together with Ferreira's TU Dublin dissertation on environment sensitivity [23] and Connolly Bree's UCD thesis on design-level energy effects [4], it forms the Irish strand of this work; I did not find a recent Irish thesis that benchmarks PostgreSQL query rewrites specifically, so the closer precedents are international.
+
+The most directly comparable is Cedeño et al. [42], who ran the 22 TPC-H queries on PostgreSQL and measured per-query energy on both client and server while applying optimisation strategies (indexing and compression), finding that indexing cut energy on most queries. Taipalus [43] measured PostgreSQL 16 throughput with pgbench and whole-system power under different logical designs, repeating each run three times from a cold reboot, and found normalisation changed energy per transaction by around 74 % — a reminder that schema and query shape, not only hardware, drive the energy figure. The question behind my H4 was asked directly by Niemann et al. [44], who ran TPC-H and the Star Schema Benchmark on PostgreSQL and concluded that faster queries generally did use less energy, and earlier by Tsirogiannis, Harizopoulos and Shah [45], whose SIGMOD study found that within a single server "the most energy-efficient configuration is typically the highest-performing one". GreenCode tests that claim at the level of individual rewrites rather than whole workloads, and the intention-to-treat analysis is where it would show up if the claim fails for AI-generated code. Mahajan, Blakeney and Zong [46] measured query-level energy on MySQL, MongoDB and Cassandra with YCSB and showed that query-level optimisations alone saved energy without costing throughput, which is the premise my SQL half depends on.
+
+Two further studies shaped how I report numbers. Salunke and Ouda [47] built a small Python harness to compare PostgreSQL and MySQL, ran each query a hundred times and reported medians and percentiles rather than means — the same choice I make, for the same reason. Lindblom and Strandin's Lund master's thesis [48] is a good example of pgbench done carefully (separate client machine, hour-long runs repeated several times, one variable changed at a time) and also of why that style does not fit here: their effect sizes were fractions of a percent and needed long runs to resolve, whereas a query rewrite typically changes execution time by an order of magnitude and is better resolved by many short paired repetitions.
+
+## 8. Limitations I will report
 
 Single machine, single client, single PostgreSQL version; a cache-resident dataset that does not exercise I/O; one-second energy granularity that is coarse relative to millisecond queries; and a benchmark set I wrote myself, which is representative of the rule catalogue rather than of production workloads. None of these invalidate a paired comparison on the same machine, but all of them limit how far the absolute numbers generalise, and they are stated in the threats-to-validity section of the methodology.
 
@@ -69,5 +77,21 @@ Single machine, single client, single PostgreSQL version; a cache-resident datas
 [39] M. Raasveldt, P. Holanda, T. Gubner, and H. Mühleisen, "Fair benchmarking considered difficult: Common pitfalls in database performance testing," in *Proc. Workshop Testing Database Systems (DBTest)*, 2018, art. 2, doi: 10.1145/3209950.3209955.
 
 [40] "A performance analysis comparison of raw SQL and Prisma ORM," *Procedia Comput. Sci.*, 2025. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S187705092502722X — *check authors, volume and pages before citing.*
+
+[41] Q. Yang, "Benchmarking data warehouse architectures: A feature-based modelling and evaluation methodology," Ph.D. thesis, School of Computing, Dublin City University, Dublin, Ireland, 2019. [Online]. Available: https://doras.dcu.ie/23739/
+
+[42] E. Cedeño, A. Aguilera, D. Muñante, J. Correia, L. Guerrero, C. Sivira, and Y. Cardinale, "An evaluation of the impact of end-to-end query optimization strategies on energy consumption," in *Proc. 19th Int. Conf. Evaluation of Novel Approaches to Software Engineering (ENASE)*, vol. 1, 2024, pp. 657–665, doi: 10.5220/0012708000003687.
+
+[43] T. Taipalus, "On the effects of logical database design on database size, query complexity, query performance, and energy consumption," arXiv:2501.07449, 2025.
+
+[44] R. Niemann, N. Korfiatis, R. Zicari, and R. Göbel, "Does query performance optimization lead to energy efficiency? A comparative analysis of energy efficiency of database operations under different workload scenarios," arXiv:1303.4869, 2013.
+
+[45] D. Tsirogiannis, S. Harizopoulos, and M. A. Shah, "Analyzing the energy efficiency of a database server," in *Proc. ACM SIGMOD Int. Conf. Management of Data*, 2010, pp. 231–242, doi: 10.1145/1807167.1807194.
+
+[46] D. Mahajan, C. Blakeney, and Z. Zong, "Improving the energy efficiency of relational and NoSQL databases via query optimizations," *Sustain. Comput.: Informat. Syst.*, vol. 22, pp. 120–133, 2019, doi: 10.1016/j.suscom.2019.01.017. *(Confirm volume/pages/DOI in Zotero; the underlying M.Sc. thesis is D. Mahajan, Texas State Univ., 2016, https://digital.library.txst.edu/items/e5a4418a-0a47-4fa8-baea-184279da3fb6.)*
+
+[47] S. V. Salunke and A. Ouda, "A performance benchmark for the PostgreSQL and MySQL databases," *Future Internet*, vol. 16, no. 10, art. 382, 2024, doi: 10.3390/fi16100382.
+
+[48] M. Lindblom and F. Strandin, "Performance analysis and improvement of PostgreSQL," M.Sc. thesis, Dept. Computer Science, Lund University, Lund, Sweden, 2015. [Online]. Available: https://lup.lub.lu.se/student-papers/record/4939915
 
 *Not used:* R. Cattell and J. Skeen's engineering (OO1) benchmark [the ResearchGate link] concerns object/CAD workloads and is not relevant to query rewriting; the 2026 arXiv paper on "hybrid deep research" benchmarks agentic AI tasks, not database performance; the Drill/Presto and big-data reviews concern distributed analytics engines. I have left them out rather than cite them for decoration.
