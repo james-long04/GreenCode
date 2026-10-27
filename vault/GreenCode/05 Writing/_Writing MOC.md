@@ -19,7 +19,7 @@ Sections in the order they appear in the report. Each note holds the **final agr
 7. [[05 Writing/Appendix A — Abtahi and Azim]]
 8. [[05 Writing/Appendix B — Bachras and Jacobsen]]
 9. [[05 Writing/References (IEEE)]] — [1]–[31]
-10. [[05 Writing/Benchmarking Approach]] — method, best practice, refs [32]–[48]
+10. [[05 Writing/Benchmarking Approach]] — method, best practice, refs [32]–[47]
 11. [[05 Writing/Writing style guide]]
 
 Figures for the report: [[02 Architecture/Diagrams]], [[01 Project/Plan and timeline]].
