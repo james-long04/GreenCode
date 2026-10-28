@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1128" viewBox="0 0 1240 1128" font-family="Segoe UI, Arial, sans-serif">
+<rect width="1240" height="1128" fill="white"/>
+<text x="60" y="44" font-size="28" font-weight="700" fill="#1a1a1a">How GreenCode works</text>
+<text x="60" y="74" font-size="15" fill="#555">Every piece of code goes through the same seven stages. Nothing is reported unless it passed the test and was measured.</text>
+<defs><marker id="ah" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker><marker id="ahr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#C0392B"/></marker></defs>
+<rect x="330" y="110" width="230" height="70" rx="35" fill="#FFF4C2" stroke="#B8860B" stroke-width="2"/>
+<text x="445.0" y="152.0" text-anchor="middle" font-size="20" font-weight="600" fill="#1a1a1a">Your code</text>
+<text x="600" y="151.0" font-size="16" fill="#222">A Python function or a SQL query</text>
+<line x1="445.0" y1="180" x2="445.0" y2="220" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="330" y="222" width="230" height="70" rx="10" fill="#DCEBFA" stroke="#2F6DB5" stroke-width="2"/>
+<text x="445.0" y="264.0" text-anchor="middle" font-size="20" font-weight="600" fill="#1a1a1a">1. Detect</text>
+<text x="600" y="263.0" font-size="16" fill="#222">Static-analysis rules scan the code for known inefficiencies</text>
+<line x1="445.0" y1="292" x2="445.0" y2="332" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="330" y="334" width="230" height="70" rx="10" fill="#DCEBFA" stroke="#2F6DB5" stroke-width="2"/>
+<text x="445.0" y="376.0" text-anchor="middle" font-size="20" font-weight="600" fill="#1a1a1a">2. Explain</text>
+<text x="600" y="365.0" font-size="16" fill="#222">Each finding says where the problem is, why it is slow and</text>
+<text x="600" y="385.0" font-size="16" fill="#222">what to change</text>
+<line x1="445.0" y1="404" x2="445.0" y2="444" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="330" y="446" width="230" height="70" rx="10" fill="#E8DDF7" stroke="#6A3FB5" stroke-width="2"/>
+<text x="445.0" y="488.0" text-anchor="middle" font-size="20" font-weight="600" fill="#1a1a1a">3. Optimise</text>
+<text x="600" y="477.0" font-size="16" fill="#222">A local AI model rewrites the code — with the findings</text>
+<text x="600" y="497.0" font-size="16" fill="#222">(GreenCode) or without them (AI-only)</text>
+<line x1="445.0" y1="516" x2="445.0" y2="556" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="330" y="558" width="230" height="70" rx="10" fill="#FFE3C7" stroke="#C65A00" stroke-width="2"/>
+<text x="445.0" y="600.0" text-anchor="middle" font-size="20" font-weight="600" fill="#1a1a1a">4. Test</text>
+<text x="600" y="589.0" font-size="16" fill="#222">Original and rewrite run on the same inputs</text>
+<text x="600" y="609.0" font-size="16" fill="#222">in a sandbox — the outputs must match</text>
+<line x1="445.0" y1="628" x2="445.0" y2="668" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="330" y="670" width="230" height="70" rx="10" fill="#DDF2E3" stroke="#2E8B57" stroke-width="2"/>
+<text x="445.0" y="712.0" text-anchor="middle" font-size="20" font-weight="600" fill="#1a1a1a">5. Benchmark</text>
+<text x="600" y="701.0" font-size="16" fill="#222">Both versions are timed many times, back to back, after</text>
+<text x="600" y="721.0" font-size="16" fill="#222">warm-up</text>
+<line x1="445.0" y1="740" x2="445.0" y2="780" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="330" y="782" width="230" height="70" rx="10" fill="#DDF2E3" stroke="#2E8B57" stroke-width="2"/>
+<text x="445.0" y="824.0" text-anchor="middle" font-size="20" font-weight="600" fill="#1a1a1a">6. Measure</text>
+<text x="600" y="813.0" font-size="16" fill="#222">CPU, memory, energy (from the CPU&#x27;s RAPL counter) and CO₂e for</text>
+<text x="600" y="833.0" font-size="16" fill="#222">both versions</text>
+<line x1="445.0" y1="852" x2="445.0" y2="892" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="330" y="894" width="230" height="70" rx="10" fill="#C9EBD3" stroke="#1F6B45" stroke-width="2"/>
+<text x="445.0" y="936.0" text-anchor="middle" font-size="20" font-weight="600" fill="#1a1a1a">7. Verify</text>
+<text x="600" y="925.0" font-size="16" fill="#222">Statistics decide: is the rewrite really faster and greener,</text>
+<text x="600" y="945.0" font-size="16" fill="#222">or just noise?</text>
+<line x1="445.0" y1="964" x2="445.0" y2="1004" stroke="#333" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="330" y="1006" width="230" height="70" rx="35" fill="#FFF4C2" stroke="#B8860B" stroke-width="2"/>
+<text x="445.0" y="1048.0" text-anchor="middle" font-size="20" font-weight="600" fill="#1a1a1a">Evidence</text>
+<text x="600" y="1037.0" font-size="16" fill="#222">The dashboard shows original vs optimised — every figure</text>
+<text x="600" y="1057.0" font-size="16" fill="#222">labelled measured or estimated</text>
+<rect x="60" y="556" width="200" height="74" rx="10" fill="#FBE0DC" stroke="#C0392B" stroke-width="2"/>
+<text x="160" y="582" text-anchor="middle" font-size="18" font-weight="600" fill="#8E1B10">Rejected</text>
+<text x="160" y="604" text-anchor="middle" font-size="13" fill="#8E1B10">wrong answer: recorded,</text>
+<text x="160" y="620" text-anchor="middle" font-size="13" fill="#8E1B10">never benchmarked</text>
+<line x1="330" y1="593.0" x2="262" y2="593.0" stroke="#C0392B" stroke-width="2" marker-end="url(#ahr)"/>
+<text x="295.0" y="585.0" text-anchor="middle" font-size="13" fill="#C0392B">fails</text>
+</svg>

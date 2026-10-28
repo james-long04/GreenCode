@@ -7,6 +7,9 @@ tags: [architecture, diagrams]
 
 # Diagrams (`docs/diagrams/`, Mermaid sources in `_assets/*.mmd`)
 
+## Simple pipeline flowchart (for the interim report)
+![[_assets/pipeline-simple.png]]
+
 ## Flowchart
 ![[_assets/flowchart.png]]
 
