@@ -27,6 +27,8 @@ class Settings(BaseSettings):
         description="libpq URL used by the SQL verifier/benchmark runner.",
     )
     benchmark_schema: str = "bench"
+    # TPC-H-derived dataset (scripts/load_tpch.py) used by the laboratory experiments.
+    tpch_schema: str = "tpch"
 
     # --- AI --------------------------------------------------------------
     llm_provider: str = Field(default="ollama", description="ollama | mock")
