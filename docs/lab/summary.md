@@ -16,3 +16,9 @@
 
 - balanced: time 0.958, energy 1.107
 - best-performance: time 0.743, energy 1.227
+
+## WP4: 8 complex queries analysed
+
+## WP5
+
+See `wp5_optimised.md` — 12/16 benchmarked; c02 NOT IN→NOT EXISTS 330× under guidance; three correct-but-slower cases; time/energy divergence in both directions.

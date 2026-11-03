@@ -1,0 +1,98 @@
+{
+  "total_runs": 16,
+  "conditions": {
+    "ai_only": {
+      "runs": 8,
+      "generated": 8,
+      "correct": 6,
+      "correctness_rate": 0.75,
+      "unchanged": 0,
+      "benchmarked": 6,
+      "faster_significant": 3,
+      "slower_significant": 2,
+      "median_speedup": 0.913909951811785,
+      "geomean_speedup": 1.1170449157864433,
+      "median_time_change_pct": 11.459342615020958,
+      "geomean_energy_ratio": 0.7294673156432909,
+      "median_energy_change_pct": 19.31100830878046,
+      "failures": {
+        "wrong_output": 2
+      }
+    },
+    "greencode": {
+      "runs": 8,
+      "generated": 8,
+      "correct": 6,
+      "correctness_rate": 0.75,
+      "unchanged": 0,
+      "benchmarked": 6,
+      "faster_significant": 2,
+      "slower_significant": 2,
+      "median_speedup": 1.1135469819305537,
+      "geomean_speedup": 2.590774667706201,
+      "median_time_change_pct": -4.597123073304456,
+      "geomean_energy_ratio": 1.08036120831859,
+      "median_energy_change_pct": 50.694411091505074,
+      "failures": {
+        "wrong_output": 2
+      }
+    }
+  },
+  "hypotheses": {
+    "H1": {
+      "ai_only_rate": 0.75,
+      "greencode_rate": 0.75,
+      "fisher_p": 0.7153846153846154,
+      "supported": false
+    },
+    "H2": {
+      "paired_cases": 5,
+      "ai_only_geomean": 0.8173153136548549,
+      "greencode_geomean": 2.827636612720109,
+      "greencode_better": 2,
+      "ai_only_better": 1,
+      "ties": 2,
+      "wilcoxon_p": 0.15625,
+      "supported": false,
+      "intention_to_treat": {
+        "paired_cases": 8,
+        "ai_only_geomean": 1.086558158708716,
+        "greencode_geomean": 2.042077552804825,
+        "greencode_better": 3,
+        "ai_only_better": 2,
+        "ties": 3,
+        "wilcoxon_p": 0.234375,
+        "supported": false
+      }
+    },
+    "H3": {
+      "paired_cases": 5,
+      "ai_only_geomean": 0.7737298030052213,
+      "greencode_geomean": 1.121901405312705,
+      "greencode_better": 2,
+      "ai_only_better": 3,
+      "ties": 0,
+      "wilcoxon_p": 0.6875,
+      "supported": false,
+      "intention_to_treat": {
+        "paired_cases": 8,
+        "ai_only_geomean": 0.7893223102084207,
+        "greencode_geomean": 1.0596848769449154,
+        "greencode_better": 3,
+        "ai_only_better": 4,
+        "ties": 1,
+        "wilcoxon_p": 0.59375,
+        "supported": false
+      }
+    },
+    "H4": {
+      "cases": 12,
+      "median_divergence_pp": 50.0276829237052,
+      "cases_diverging_over_10pp": 10,
+      "spearman_rho": 0.2937062937062937,
+      "spearman_p": 0.3541476412329215,
+      "supported": true
+    }
+  },
+  "by_language": {}
+}
