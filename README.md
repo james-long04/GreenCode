@@ -139,6 +139,7 @@ python scripts\run_tpch.py --validate         # EXPLAIN the 22 + 8 queries
 python scripts\run_tpch.py --check            # pre-flight (mains, plan, LHM, Ollama stopped)
 python scripts\run_tpch.py --wp 2             # then --wp 1 --passes 3, --wp 3 ..., --wp 4, --wp 5
 python scripts\run_tpch.py --export lab.csv
+python scripts\analyse_lab.py lab.csv --out lab-analysis   # tables + figures per work package
 ```
 
 Results go to the `lab_runs` table (one row per query × condition × pass) and the CSV.
