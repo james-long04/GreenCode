@@ -23,7 +23,10 @@ not audited, so all results are described as **TPC-H-derived**, never as TPC-H r
 ## 2. Fixed conditions (every run)
 
 1. **Mains power**, battery above 50 %, lid open, screen on at fixed brightness.
-2. **Power plan / power mode** set before the run and not changed during it; recorded by name.
+2. **Power mode** (Windows 11 Settings → Power & battery → Power mode, *Plugged in*) set before the run and not changed
+   during it; recorded via `--plan-label`. The standard mode for all non-WP3 runs is **Balanced**. Results are only
+   comparable within a mode: WP3 (3 Nov 2026) showed Best Performance cuts pass time by 33 % at +2 % energy, and
+   doubles-to-trebles the energy of serial queries. Note the 3 Nov WP1/WP2 runs were made under Best Power Efficiency.
 3. **Ollama stopped** (it holds ~5 GB and wakes periodically). Required.
 4. **Quiet machine**: browser, VS Code, Teams, Spotify, OneDrive sync, Windows Search indexing and Windows Update
    servicing closed or paused. The pre-flight lists offenders; it warns rather than refuses, and the list is recorded.

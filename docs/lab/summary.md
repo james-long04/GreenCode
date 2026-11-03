@@ -11,3 +11,8 @@
 - one pass: 23.0 s, 202 J net
 - ≥10 W group: q01, q03, q04, q05, q06, q07, q08, q09, q10, q12, q14, q16, q18, q19, q21, q22
 - <10 W group: q02, q11, q13, q15, q17, q20
+
+## WP3 power modes (geomean vs reference)
+
+- balanced: time 0.958, energy 1.107
+- best-performance: time 0.743, energy 1.227

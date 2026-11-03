@@ -95,7 +95,7 @@ def wp1(rows, out: Path, figs: Path):  # type: ignore[no-untyped-def]
         cw = csv.writer(fh); cw.writerow(hdr); cw.writerows(table)
     total_ms = sum(med[q] for q in qs); total_j = sum(jpe[q] for q in qs if jpe.get(q) is not None)
     low = [q for q in qs if w.get(q) is not None and w[q] < 10]; high = [q for q in qs if w.get(q) is not None and w[q] >= 10]
-    md = ["# WP1 — baseline (TPC-H-derived, SF 1, hot cache, Balanced power mode)", "",
+    md = ["# WP1 — baseline (TPC-H-derived, SF 1, hot cache; Windows power mode as recorded with the run — the 3 Nov 2026 runs were under Best Power Efficiency)", "",
           md_table(hdr, table), "",
           f"**One pass over the 22 queries:** {total_ms / 1000:.1f} s of query time, {total_j:.0f} J net "
           f"(TPC-Energy-style energy per query set), {total_j / (total_ms / 1000):.1f} W average net power.", "",
@@ -173,7 +173,7 @@ def wp3(rows, out: Path, figs: Path):  # type: ignore[no-untyped-def]
     for r in rs:
         plan = r["condition"].split("plan=")[-1]
         by[r["query_id"]][plan].append(r)
-    ref = "balanced" if "balanced" in plans else plans[0]
+    ref = "best-efficiency" if "best-efficiency" in plans else ("balanced" if "balanced" in plans else plans[0])
     qs = sorted(q for q in by if ref in by[q])
     table = []; tr = defaultdict(list); er = defaultdict(list)
     for q in qs:
@@ -194,7 +194,26 @@ def wp3(rows, out: Path, figs: Path):  # type: ignore[no-untyped-def]
     md = ["# WP3 — power management", "", f"Reference plan: **{ref}**. Ratios < 1 are faster / lower energy than the reference.", "",
           md_table(hdr, table), "", "## Summary (geometric means across queries)", "",
           md_table(["plan", "queries", "time ÷ ref", "energy ÷ ref"], summ), ""]
+    # totals per pass and the serial (<10 W under the reference) group
+    totals = []
+    for p in plans:
+        t = sum(st.median([r["_median"] for r in by[q][p]]) for q in qs if p in by[q]) / 1000
+        e = sum(st.median([r["_jpe"] for r in by[q][p] if r["_jpe"] is not None] or [0]) for q in qs if p in by[q])
+        totals.append([p, t, e, e / t if t else None])
+    serial = [q for q in qs if st.median([r["_w"] for r in by[q][ref] if r["_w"] is not None] or [99]) < 10]
+    srows = []
+    for p in plans:
+        if p == ref: continue
+        tt = [st.median([r["_median"] for r in by[q][p]]) / st.median([r["_median"] for r in by[q][ref]]) for q in serial if p in by[q]]
+        ee = [st.median([r["_jpe"] for r in by[q][p]]) / st.median([r["_jpe"] for r in by[q][ref]]) for q in serial if p in by[q]]
+        srows.append([p, len(tt), geomean(tt), geomean(ee)])
+    md += ["## One pass over the query set", "", md_table(["plan", "query time (s)", "net energy (J)", "avg net W"], totals), "",
+           f"## Serial (<10 W under {ref}) queries only: {', '.join(serial)}", "", md_table(["plan", "queries", "time ÷ ref", "energy ÷ ref"], srows), ""]
     write(out / "wp3_power_modes.md", "\n".join(md))
+    _grouped(figs / "wp3_time_ratio.png", qs, {p: [ (st.median([r["_median"] for r in by[q][p]]) / st.median([r["_median"] for r in by[q][ref]])) if p in by[q] else 0 for q in qs] for p in plans if p != ref},
+             f"Median time ÷ {ref}", "WP3 — time by power mode", ref=1.0)
+    _grouped(figs / "wp3_energy_ratio.png", qs, {p: [ (st.median([r["_jpe"] for r in by[q][p]]) / st.median([r["_jpe"] for r in by[q][ref]])) if p in by[q] else 0 for q in qs] for p in plans if p != ref},
+             f"Net J per execution ÷ {ref}", "WP3 — energy by power mode", ref=1.0)
     return summ
 
 
@@ -207,6 +226,28 @@ def wp4(rows, out: Path):  # type: ignore[no-untyped-def]
     table = [[q, med[q], ex.get(q), w.get(q), jpe.get(q)] for q in qs]
     write(out / "wp4_complex.md", "\n".join(["# WP4 — complex queries", "", md_table(["query", "median ms", "EXPLAIN exec ms", "mean W", "net J / exec"], table), ""]))
     return table
+
+
+def _grouped(path: Path, labels, series: dict, ylabel, title, ref=None):  # type: ignore[no-untyped-def]
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except Exception:
+        return
+    n = len(series); width = 0.8 / max(n, 1)
+    fig, ax = plt.subplots(figsize=(max(6, 0.5 * len(labels) + 2), 3.8))
+    colours = ["#2E8B57", "#C65A00", "#2F6DB5", "#6A3FB5"]
+    for i, (name, vals) in enumerate(series.items()):
+        ax.bar([x + (i - (n - 1) / 2) * width for x in range(len(labels))], vals, width, label=name, color=colours[i % len(colours)])
+    if ref is not None:
+        ax.axhline(ref, color="#555", linewidth=1, linestyle="--")
+    ax.set_xticks(range(len(labels))); ax.set_xticklabels(labels, rotation=60, fontsize=8)
+    ax.set_ylabel(ylabel); ax.set_title(title); ax.legend(frameon=False)
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
+    fig.tight_layout(); fig.savefig(path, dpi=160); plt.close(fig)
+    print("  wrote", path)
 
 
 def _bar(path: Path, labels, values, ylabel, title, ref=None):  # type: ignore[no-untyped-def]

@@ -1,4 +1,4 @@
-# WP1 — baseline (TPC-H-derived, SF 1, hot cache, Balanced power mode)
+# WP1 — baseline (TPC-H-derived, SF 1, hot cache; Windows power mode as recorded with the run — the 3 Nov 2026 runs were under Best Power Efficiency)
 
 | query | passes | median ms | EXPLAIN exec ms | client/exec | mean W | net J / exec | J per 1000 rows | rows | parallel workers |
 |---|---|---|---|---|---|---|---|---|---|
