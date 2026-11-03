@@ -8,9 +8,9 @@
 
 ## WP1 baseline
 
-- one pass: 23.0 s, 202 J net
-- ≥10 W group: q01, q03, q04, q05, q06, q07, q08, q09, q10, q12, q14, q16, q18, q19, q21, q22
-- <10 W group: q02, q11, q13, q15, q17, q20
+- one pass: 21.8 s, 205 J net
+- ≥10 W group: q01, q02, q03, q04, q05, q06, q07, q08, q09, q10, q12, q14, q16, q18, q19, q21, q22
+- <10 W group: q11, q13, q15, q17, q20
 
 ## WP3 power modes (geomean vs reference)
 
@@ -18,7 +18,3 @@
 - best-performance: time 0.743, energy 1.227
 
 ## WP4: 8 complex queries analysed
-
-## WP5
-
-See `wp5_optimised.md` — 12/16 benchmarked; c02 NOT IN→NOT EXISTS 330× under guidance; three correct-but-slower cases; time/energy divergence in both directions.

@@ -79,6 +79,11 @@ def wp1(rows, out: Path, figs: Path):  # type: ignore[no-untyped-def]
     rs = [r for r in rows if r["work_package"] == "wp1"]
     if not rs:
         return None
+    # The baseline is the standard mode (plan=balanced) when present; other labelled runs are reported separately.
+    labels = sorted({r["condition"].split("plan=")[-1] if "plan=" in r["condition"] else "(unlabelled: best-efficiency on 3 Nov 2026)" for r in rs})
+    std = "balanced" if "balanced" in labels else labels[0]
+    rs = [r for r in rs if (r["condition"].split("plan=")[-1] if "plan=" in r["condition"] else labels[0]) == std]
+    print(f"  WP1 baseline mode: {std} (others present: {[l for l in labels if l != std]})")
     qs = sorted({r["query_id"] for r in rs})
     med = per_query_median(rs, "_median"); jpe = per_query_median(rs, "_jpe"); w = per_query_median(rs, "_w")
     ex = per_query_median(rs, "_exec"); par = per_query_median(rs, "_par") if any(r["_par"] is not None for r in rs) else {}
@@ -95,7 +100,7 @@ def wp1(rows, out: Path, figs: Path):  # type: ignore[no-untyped-def]
         cw = csv.writer(fh); cw.writerow(hdr); cw.writerows(table)
     total_ms = sum(med[q] for q in qs); total_j = sum(jpe[q] for q in qs if jpe.get(q) is not None)
     low = [q for q in qs if w.get(q) is not None and w[q] < 10]; high = [q for q in qs if w.get(q) is not None and w[q] >= 10]
-    md = ["# WP1 — baseline (TPC-H-derived, SF 1, hot cache; Windows power mode as recorded with the run — the 3 Nov 2026 runs were under Best Power Efficiency)", "",
+    md = [f"# WP1 — baseline (TPC-H-derived, SF 1, hot cache, Windows power mode: {std})", "",
           md_table(hdr, table), "",
           f"**One pass over the 22 queries:** {total_ms / 1000:.1f} s of query time, {total_j:.0f} J net "
           f"(TPC-Energy-style energy per query set), {total_j / (total_ms / 1000):.1f} W average net power.", "",
