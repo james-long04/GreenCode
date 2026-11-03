@@ -38,12 +38,18 @@ SELECT name, setting, unit FROM pg_settings WHERE name IN
  'max_worker_processes','jit','random_page_cost','server_version','data_checksums','wal_level','synchronous_commit')
 ORDER BY name;
 "@
-try {
-  $rows = & psql -U greencode -d greencode -tA -F "|" -c $pgq 2>&1
-  $rows | ForEach-Object { Out ("   " + $_) }
-  $size = & psql -U greencode -d greencode -tAc "SELECT pg_size_pretty(pg_database_size('greencode'));" 2>&1
-  Out ("   current greencode database size: " + $size)
-} catch { Out "   psql not on PATH or connection failed: $_" }
+$py = @"
+import sys; sys.path.insert(0, '.')
+import psycopg
+from app.config import get_settings
+with psycopg.connect(get_settings().benchmark_database_url) as c:
+    for name, setting, unit in c.execute("""SELECT name, setting, unit FROM pg_settings WHERE name IN
+      ('shared_buffers','work_mem','maintenance_work_mem','effective_cache_size','max_parallel_workers_per_gather',
+       'max_worker_processes','jit','random_page_cost','server_version','wal_level','synchronous_commit') ORDER BY name"""):
+        print(f"   {name:32s} {setting} {unit or ''}")
+    print("   greencode database size:", c.execute("SELECT pg_size_pretty(pg_database_size(current_database()))").fetchone()[0])
+"@
+try { & python -c $py 2>&1 | ForEach-Object { Out $_ } } catch { Out "   could not query PostgreSQL: $_" }
 
 Section "4. LibreHardwareMonitor sensors"
 try {

@@ -129,6 +129,11 @@ def _lhm_dram_watts(tree: dict[str, Any]) -> float | None:
     return _lhm_find(tree, "/power/", r"dram|memory")
 
 
+def _lhm_platform_watts(tree: dict[str, Any]) -> float | None:
+    """Intel PSYS domain ('CPU Platform' in LHM): whole-platform power incl. memory, iGPU, VRs — when exposed."""
+    return _lhm_find(tree, "/power/", r"platform|psys")
+
+
 @functools.lru_cache(maxsize=1)
 def lhm_available() -> bool:
     url = get_settings().lhm_url
@@ -156,6 +161,7 @@ class LhmMeter:
         self.poll_seconds = poll_seconds if poll_seconds is not None else settings.lhm_poll_seconds
         self.temps: list[float] = []          # CPU package/core temperature readings seen during the window
         self.dram_updates: list[tuple[float, float]] = []  # (time, watts) if a DRAM power sensor exists
+        self.platform_updates: list[tuple[float, float]] = []  # (time, watts) if a PSYS/platform sensor exists
         self._updates: list[tuple[float, float]] = []  # (time observed, watts) at value changes only
         self._polls = 0
         self._stop = threading.Event()
@@ -181,6 +187,9 @@ class LhmMeter:
                 d = _lhm_dram_watts(tree)
                 if d is not None and (not self.dram_updates or d != self.dram_updates[-1][1]):
                     self.dram_updates.append((time.perf_counter(), d))
+                pl = _lhm_platform_watts(tree)
+                if pl is not None and (not self.platform_updates or pl != self.platform_updates[-1][1]):
+                    self.platform_updates.append((time.perf_counter(), pl))
             self._stop.wait(self.poll_seconds)
 
     def start(self) -> None:
@@ -225,6 +234,9 @@ class LhmMeter:
         if self.dram_updates:
             details["dram_mean_watts"] = sum(w for _, w in self.dram_updates) / len(self.dram_updates)
             details["dram_joules_approx"] = details["dram_mean_watts"] * wall
+        if self.platform_updates:
+            details["platform_mean_watts"] = sum(w for _, w in self.platform_updates) / len(self.platform_updates)
+            details["platform_joules_approx"] = details["platform_mean_watts"] * wall
         return EnergySample(joules=joules, method="measured", source=self.source, wall_seconds=wall, details=details)
 
 

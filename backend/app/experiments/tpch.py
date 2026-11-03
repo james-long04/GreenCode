@@ -236,6 +236,8 @@ def export_rows(db: Session, wp: str | None = None) -> list[dict[str, Any]]:
             "temp_c_start": (r.energy_details or {}).get("temp_c_start"),
             "temp_c_max": (r.energy_details or {}).get("temp_c_max"),
             "dram_joules_approx": (r.energy_details or {}).get("dram_joules_approx"),
+            "platform_mean_watts": (r.energy_details or {}).get("platform_mean_watts"),
+            "platform_joules_approx": (r.energy_details or {}).get("platform_joules_approx"),
             "pg_execution_ms": (r.plan_metrics or {}).get("pg_execution_ms"),
             "pg_shared_hit_blocks": (r.plan_metrics or {}).get("pg_shared_hit_blocks"),
             "pg_shared_read_blocks": (r.plan_metrics or {}).get("pg_shared_read_blocks"),
