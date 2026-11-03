@@ -149,7 +149,7 @@ def run_wp5(args: argparse.Namespace, settings) -> int:  # type: ignore[no-untyp
         print("no cases in benchmarks/tpch/cases")
         return 1
     provider = build_provider(s)
-    print(f"provider: {provider.model_name}; {len(cases)} cases; schema {s.benchmark_schema}")
+    print(f"provider: {provider.model_name()}; {len(cases)} cases; schema {s.benchmark_schema}")
     with session_scope() as db:
         project = db.execute(select(Project).where(Project.name == args.project)).scalars().first()
         if project is None:
