@@ -58,7 +58,7 @@ class EnergySample:
 # LibreHardwareMonitor (Windows, signed driver, JSON over HTTP)
 # ----------------------------------------------------------------------------
 
-LHM_POLL_SECONDS = 0.1
+LHM_POLL_SECONDS = 0.1  # default; see Settings.lhm_poll_seconds
 
 
 def _lhm_fetch(url: str, timeout: float = 1.0) -> dict[str, Any] | None:
@@ -67,6 +67,13 @@ def _lhm_fetch(url: str, timeout: float = 1.0) -> dict[str, Any] | None:
             return json.loads(resp.read().decode("utf-8", errors="replace"))
     except Exception:  # noqa: BLE001
         return None
+
+
+def _parse_value(raw: str) -> float | None:
+    """LHM renders values as e.g. '7,5 W' or '48 °C' depending on locale."""
+    import re as _re
+    m = _re.search(r"-?\d+(?:[.,]\d+)?", raw)
+    return float(m.group().replace(",", ".")) if m else None
 
 
 def _lhm_power_sensors(tree: dict[str, Any]) -> list[tuple[str, float]]:
@@ -97,6 +104,31 @@ def _lhm_package_watts(tree: dict[str, Any]) -> tuple[str, float] | None:
     return sensors[0] if sensors else None
 
 
+def _lhm_find(tree: dict[str, Any], kind: str, name_match: str) -> float | None:
+    """First sensor whose SensorId contains ``kind`` and whose label matches ``name_match`` (case-insensitive)."""
+    import re as _re
+    out: list[float] = []
+
+    def walk(node: dict[str, Any]) -> None:
+        sid = str(node.get("SensorId", ""))
+        if kind in sid and _re.search(name_match, str(node.get("Text", "")), _re.I):
+            v = _parse_value(str(node.get("Value", "")))
+            if v is not None:
+                out.append(v)
+        for c in node.get("Children", []) or []:
+            walk(c)
+    walk(tree)
+    return out[0] if out else None
+
+
+def _lhm_temperature(tree: dict[str, Any]) -> float | None:
+    return _lhm_find(tree, "/temperature/", r"package|core average|cpu")
+
+
+def _lhm_dram_watts(tree: dict[str, Any]) -> float | None:
+    return _lhm_find(tree, "/power/", r"dram|memory")
+
+
 @functools.lru_cache(maxsize=1)
 def lhm_available() -> bool:
     url = get_settings().lhm_url
@@ -118,8 +150,12 @@ class LhmMeter:
     source = "lhm"
     MAX_TAIL_SECONDS = 3.0
 
-    def __init__(self, settings: Settings | None = None) -> None:
-        self.url = (settings or get_settings()).lhm_url
+    def __init__(self, settings: Settings | None = None, poll_seconds: float | None = None) -> None:
+        settings = settings or get_settings()
+        self.url = settings.lhm_url
+        self.poll_seconds = poll_seconds if poll_seconds is not None else settings.lhm_poll_seconds
+        self.temps: list[float] = []          # CPU package/core temperature readings seen during the window
+        self.dram_updates: list[tuple[float, float]] = []  # (time, watts) if a DRAM power sensor exists
         self._updates: list[tuple[float, float]] = []  # (time observed, watts) at value changes only
         self._polls = 0
         self._stop = threading.Event()
@@ -139,7 +175,13 @@ class LhmMeter:
                     if last is None or watts != last:
                         self._updates.append((time.perf_counter(), watts))
                         last = watts
-            self._stop.wait(LHM_POLL_SECONDS)
+                t = _lhm_temperature(tree)
+                if t is not None and (not self.temps or t != self.temps[-1]):
+                    self.temps.append(t)
+                d = _lhm_dram_watts(tree)
+                if d is not None and (not self.dram_updates or d != self.dram_updates[-1][1]):
+                    self.dram_updates.append((time.perf_counter(), d))
+            self._stop.wait(self.poll_seconds)
 
     def start(self) -> None:
         self._updates.clear()
@@ -175,10 +217,15 @@ class LhmMeter:
         if ups and covered < wall:  # window ran past the last refresh we saw
             joules += ups[-1][1] * (wall - covered)
         mean_w = joules / wall if wall else 0.0
-        return EnergySample(joules=joules, method="measured", source=self.source, wall_seconds=wall,
-                            details={"sensor": self._sensor, "polls": self._polls, "distinct_readings": len(ups),
-                                     "mean_watts": mean_w, "coverage": (covered / wall) if wall else 0.0,
-                                     "tool": "LibreHardwareMonitor"})
+        details: dict[str, Any] = {"sensor": self._sensor, "polls": self._polls, "distinct_readings": len(ups),
+                                   "mean_watts": mean_w, "coverage": (covered / wall) if wall else 0.0,
+                                   "poll_seconds": self.poll_seconds, "tool": "LibreHardwareMonitor"}
+        if self.temps:
+            details["temp_c_start"], details["temp_c_end"], details["temp_c_max"] = self.temps[0], self.temps[-1], max(self.temps)
+        if self.dram_updates:
+            details["dram_mean_watts"] = sum(w for _, w in self.dram_updates) / len(self.dram_updates)
+            details["dram_joules_approx"] = details["dram_mean_watts"] * wall
+        return EnergySample(joules=joules, method="measured", source=self.source, wall_seconds=wall, details=details)
 
 
 def measure_idle_power_watts(seconds: float = 6.0) -> float | None:
@@ -276,6 +323,8 @@ def estimate_energy(cpu_seconds: float, wall_seconds: float, peak_rss_bytes: flo
 def select_method(settings: Settings | None = None) -> str:
     settings = settings or get_settings()
     method = settings.energy_method
+    if method == "none":
+        return "none"
     if method == "auto":
         if lhm_available():
             return "lhm"
@@ -289,10 +338,12 @@ def select_method(settings: Settings | None = None) -> str:
     return method
 
 
-def make_meter(method: str, settings: Settings | None = None):  # type: ignore[no-untyped-def]
+def make_meter(method: str, settings: Settings | None = None, poll_seconds: float | None = None):  # type: ignore[no-untyped-def]
     settings = settings or get_settings()
+    if method == "none":
+        return None
     if method == "lhm":
-        return LhmMeter(settings)
+        return LhmMeter(settings, poll_seconds=poll_seconds)
     if method == "codecarbon":
         iso = {"IE": "IRL", "EU": "IRL", "WORLD": "IRL"}.get(settings.carbon_factor_region, "IRL")
         return CodeCarbonMeter(country_iso=iso)

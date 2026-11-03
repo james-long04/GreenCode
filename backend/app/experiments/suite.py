@@ -78,13 +78,15 @@ def suite_dir(settings: Settings | None = None) -> Path:
 def load_cases(root: Path | None = None, language: str | None = None) -> list[Case]:
     root = root or suite_dir()
     cases: list[Case] = []
-    for sub in ("python", "sql"):
-        if language and sub != language:
+    # A root may hold python/ and sql/ subfolders (the main suite) or JSON files directly (e.g. benchmarks/tpch/cases).
+    subs = [sub for sub in ("python", "sql") if (root / sub).is_dir()] or ["."]
+    for sub in subs:
+        if language and sub not in (language, "."):
             continue
         for path in sorted((root / sub).glob("*.json")):
             data = json.loads(path.read_text())
             cases.append(Case(
-                id=data["id"], title=data.get("title", data["id"]), language=data.get("language", sub),
+                id=data["id"], title=data.get("title", data["id"]), language=data.get("language", sub if sub != "." else "sql"),
                 source=data["source"], category=data.get("category", ""), description=data.get("description", ""),
                 expected_rules=data.get("expected_rules", []), entry_point=data.get("entry_point"),
                 tests=data.get("tests", []), benchmark=data.get("benchmark", {}), path=str(path),
@@ -102,13 +104,13 @@ ProgressFn = Callable[[dict[str, Any]], None]
 def run_suite(db: Session, project_id: str, case_ids: Iterable[str] | None = None,
               conditions: Iterable[str] = CONDITIONS, provider: LLMProvider | None = None,
               settings: Settings | None = None, shuffle: bool = True, seed: int = 42,
-              progress: ProgressFn | None = None) -> list[dict[str, Any]]:
+              progress: ProgressFn | None = None, cases: list[Case] | None = None) -> list[dict[str, Any]]:
     """Run every selected case under every selected condition. Returns per-run summaries."""
     settings = settings or get_settings()
     provider = provider or build_provider(settings)
     if db.get(Project, project_id) is None:
         raise ValueError("project not found")
-    cases = load_cases()
+    cases = list(cases) if cases is not None else load_cases()
     if case_ids:
         wanted = set(case_ids)
         cases = [c for c in cases if c.id in wanted]

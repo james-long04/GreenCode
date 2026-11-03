@@ -57,12 +57,12 @@ backend/app/
   ai/            provider.py (Ollama + Mock), prompts.py (ai_only / greencode), parsing.py
   verification/  worker.py + sandbox.py (restricted subprocess), python_verifier.py, sql_verifier.py
   benchmark/     runner.py, sql_runner.py, energy.py (lhm | codecarbon | estimate), stats.py
-  experiments/   pipeline.py (generate → verify → benchmark → measure), suite.py, results.py (H1–H4)
+  experiments/   pipeline.py, suite.py, results.py (H1–H4), tpch.py + preflight.py (laboratory work packages)
   db/            models.py, session.py, benchdb.py
   api/           routes.py (dashboard API), admin.py (admin API) · main.py · logbuffer.py
 backend/tests/   pytest suite (unit + integration; integration skips without PostgreSQL)
-backend/scripts/ init_db.py · seed_bench_dataset.py · run_suite.py · export_results.py
-benchmarks/      python/*.json (18 cases) · sql/*.json (12 cases)
+backend/scripts/ init_db.py · seed_bench_dataset.py · run_suite.py · export_results.py · load_tpch.py · run_tpch.py
+benchmarks/      python/*.json (18 cases) · sql/*.json (12 cases) · tpch/ (22 standard + 8 complex queries, WP5 cases)
 database/        schema/initial_schema.sql · seed/bench_dataset.sql (controlled SQL dataset)
 frontend/        Vite + React + TypeScript dashboard (Overview, Projects, Analyse, Experiments, Rules, Admin)
 docs/            methodology, architecture, UI audit, diagrams, Gantt plan, reference library (BibTeX)
@@ -123,6 +123,25 @@ cd backend
 python scripts\run_suite.py --project "Experiment 1"
 python scripts\export_results.py --out results.csv
 ```
+
+### TPC-H-derived laboratory experiments
+
+Beyond the 30-case suite, the project runs a laboratory protocol on a TPC-H-derived
+dataset (`docs/protocol.md`): baseline, measurement overhead, power management,
+complex queries and optimised queries.
+
+```powershell
+cd backend
+pip install --user duckdb
+.\scripts\Check-TpchFeasibility.ps1          # phase 0: can this laptop do it?
+python scripts\load_tpch.py --sf 1            # generate + load the dataset (schema tpch)
+python scripts\run_tpch.py --validate         # EXPLAIN the 22 + 8 queries
+python scripts\run_tpch.py --check            # pre-flight (mains, plan, LHM, Ollama stopped)
+python scripts\run_tpch.py --wp 2             # then --wp 1 --passes 3, --wp 3 ..., --wp 4, --wp 5
+python scripts\run_tpch.py --export lab.csv
+```
+
+Results go to the `lab_runs` table (one row per query × condition × pass) and the CSV.
 
 ### Tests
 
@@ -228,6 +247,7 @@ always requires an `X-Admin-Token` header: set `GREENCODE_ADMIN_TOKEN` in
 
 ## Documentation
 
+* `docs/protocol.md` – laboratory protocol for the TPC-H-derived work packages
 * `docs/methodology.md` – experimental protocol, energy measurement, statistics, threats to validity
 * `docs/architecture.md` – component responsibilities and data model
 * `vault/GreenCode/` – Obsidian vault with every note about the project (open `00 Home.md`)

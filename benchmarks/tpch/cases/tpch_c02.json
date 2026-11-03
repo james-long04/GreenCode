@@ -1,0 +1,12 @@
+{
+  "id": "tpch_c02",
+  "title": "Suppliers with no late lineitems via NOT IN (SQL005) and SELECT * (SQL001)",
+  "language": "sql",
+  "category": "tpch_complex",
+  "expected_rules": [
+    "SQL005",
+    "SQL001"
+  ],
+  "source": "SELECT *\nFROM supplier\nWHERE s_suppkey NOT IN (\n    SELECT l_suppkey FROM lineitem WHERE l_receiptdate > l_commitdate AND l_shipdate >= DATE '1996-01-01')\n  AND s_nationkey IN (SELECT n_nationkey FROM nation WHERE n_name IN ('UNITED KINGDOM', 'IRELAND', 'FRANCE', 'GERMANY'))\nORDER BY s_acctbal DESC;",
+  "description": "WP4/WP5 complex query on the TPC-H-derived schema (set GREENCODE_TPCH_SCHEMA)."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "tpch_c08",
+  "title": "Supplier scorecard: three correlated aggregates per supplier (SQL006) over lineitem",
+  "language": "sql",
+  "category": "tpch_complex",
+  "expected_rules": [
+    "SQL006"
+  ],
+  "source": "SELECT s.s_suppkey, s.s_name,\n       (SELECT count(*) FROM lineitem l WHERE l.l_suppkey = s.s_suppkey) AS n_items,\n       (SELECT sum(l.l_extendedprice) FROM lineitem l WHERE l.l_suppkey = s.s_suppkey) AS revenue,\n       (SELECT count(*) FROM lineitem l WHERE l.l_suppkey = s.s_suppkey AND l.l_receiptdate > l.l_commitdate) AS late_items\nFROM supplier s\nWHERE s.s_nationkey = (SELECT n_nationkey FROM nation WHERE n_name = 'JAPAN')\nORDER BY revenue DESC\nLIMIT 25;",
+  "description": "WP4/WP5 complex query on the TPC-H-derived schema (set GREENCODE_TPCH_SCHEMA)."
+}

@@ -1,0 +1,11 @@
+{
+  "id": "tpch_c07",
+  "title": "SELECT * over a wide multi-table join (SQL001); nation and region are comma-joined without a condition, a Cartesian product the rule set only detects when there is no WHERE at all",
+  "language": "sql",
+  "category": "tpch_complex",
+  "expected_rules": [
+    "SQL001"
+  ],
+  "source": "SELECT *\nFROM lineitem l, orders o, nation n, region r\nWHERE l.l_orderkey = o.o_orderkey\n  AND o.o_orderdate = DATE '1995-06-15'\n  AND r.r_name = 'EUROPE';",
+  "description": "WP4/WP5 complex query on the TPC-H-derived schema (set GREENCODE_TPCH_SCHEMA)."
+}

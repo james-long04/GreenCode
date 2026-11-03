@@ -11,3 +11,4 @@ scipy>=1.11
 numpy>=1.26
 codecarbon>=2.5
 pytest>=8.0
+duckdb>=1.0  # TPC-H-derived data generation (scripts/load_tpch.py)

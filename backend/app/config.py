@@ -53,10 +53,12 @@ class Settings(BaseSettings):
     # --- energy / carbon -------------------------------------------------
     energy_method: str = Field(
         default="auto",
-        description="auto | lhm | codecarbon | estimate. 'auto' picks the best available.",
+        description="auto | lhm | codecarbon | estimate | none. 'auto' picks the best available; 'none' disables measurement (overhead experiment).",
     )
     # LibreHardwareMonitor web server (Windows). Enable it in LHM: Options > Remote Web Server > Run.
     lhm_url: str = "http://localhost:8085/data.json"
+    # How often the LHM web server is polled during a window (WP2 measurement-overhead experiment varies this).
+    lhm_poll_seconds: float = 0.1
     carbon_factor_region: str = "IE"
     estimate_cpu_tdp_watts: float = 65.0
     estimate_memory_watts_per_gb: float = 0.3725  # Green Algorithms (Lannelongue et al., 2021)
@@ -76,7 +78,7 @@ class Settings(BaseSettings):
 RUNTIME_ADJUSTABLE: frozenset[str] = frozenset({
     "llm_provider", "ollama_model", "ollama_base_url", "llm_temperature", "llm_seed",
     "benchmark_warmup_runs", "benchmark_repetitions", "benchmark_timeout_seconds",
-    "energy_method", "lhm_url", "carbon_factor_region", "estimate_cpu_tdp_watts", "estimate_pue",
+    "energy_method", "lhm_url", "lhm_poll_seconds", "carbon_factor_region", "estimate_cpu_tdp_watts", "estimate_pue",
     "sandbox_timeout_seconds", "sandbox_memory_limit_mb",
 })
 

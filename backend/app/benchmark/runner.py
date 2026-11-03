@@ -53,6 +53,37 @@ class BenchmarkOutcome:
         return self.energy[0] if self.energy else None
 
 
+def host_state() -> dict[str, Any]:
+    """Laboratory-protocol facts: power plan, battery, process count, noisy processes (Windows-aware)."""
+    out: dict[str, Any] = {"process_count": len(psutil.pids())}
+    try:
+        b = psutil.sensors_battery()
+        if b is not None:
+            out["on_ac_power"] = bool(b.power_plugged)
+            out["battery_percent"] = b.percent
+    except Exception:  # noqa: BLE001
+        pass
+    noisy = {"ollama", "msmpeng", "searchindexer", "onedrive", "chrome", "msedge", "firefox", "code", "teams",
+             "spotify", "discord", "steam", "tiworker", "mousocoreworker"}
+    present = set()
+    for p in psutil.process_iter(["name"]):
+        n = (p.info.get("name") or "").lower().removesuffix(".exe")
+        if n in noisy:
+            present.add(n)
+    out["noisy_processes"] = sorted(present)
+    if os.name == "nt":
+        try:
+            import subprocess
+            r = subprocess.run(["powercfg", "/getactivescheme"], capture_output=True, text=True, timeout=5)
+            out["power_plan"] = r.stdout.strip().split(":", 1)[-1].strip() if r.returncode == 0 else None
+            r = subprocess.run(["powercfg", "/overlaygetactivescheme"], capture_output=True, text=True, timeout=5)
+            if r.returncode == 0 and r.stdout.strip():
+                out["power_mode_overlay"] = r.stdout.strip().split(":", 1)[-1].strip()
+        except Exception:  # noqa: BLE001
+            pass
+    return out
+
+
 def environment_snapshot(settings: Settings) -> dict[str, Any]:
     vm = psutil.virtual_memory()
     freq = None
@@ -72,6 +103,7 @@ def environment_snapshot(settings: Settings) -> dict[str, Any]:
         "memory_total_gb": round(vm.total / 1e9, 2),
         "load_avg_1m": os.getloadavg()[0] if hasattr(os, "getloadavg") else None,
         "energy_method": select_method(settings),
+        **host_state(),
         "warmup_runs": settings.benchmark_warmup_runs,
         "repetitions": settings.benchmark_repetitions,
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
@@ -81,17 +113,19 @@ def environment_snapshot(settings: Settings) -> dict[str, Any]:
 class EnergyContext:
     """Starts the selected meter and records an idle baseline once per session."""
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(self, settings: Settings | None = None, method: str | None = None,
+                 poll_seconds: float | None = None, idle_seconds: float = 6.0) -> None:
         self.settings = settings or get_settings()
-        self.method = select_method(self.settings)
+        self.method = method or select_method(self.settings)
+        self.poll_seconds = poll_seconds
         self.idle_watts: float | None = None
         if self.method == "lhm":
             # LHM refreshes about once a second; a longer, quiet baseline is needed.
-            self.idle_watts = measure_idle_power_watts(6.0)
+            self.idle_watts = measure_idle_power_watts(idle_seconds)
 
     def measure(self, fn, *args, **kwargs):  # type: ignore[no-untyped-def]
         """Run ``fn`` and return (result, [energy samples])."""
-        meter = make_meter(self.method, self.settings)
+        meter = make_meter(self.method, self.settings, poll_seconds=self.poll_seconds)
         t0 = time.perf_counter()
         if meter is not None:
             meter.start()

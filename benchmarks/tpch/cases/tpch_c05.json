@@ -1,0 +1,13 @@
+{
+  "id": "tpch_c05",
+  "title": "Existence check with COUNT(*) > 0 (SQL012), leading-wildcard LIKE on a comment column (SQL004), ORDER BY without LIMIT (SQL009)",
+  "language": "sql",
+  "category": "tpch_complex",
+  "expected_rules": [
+    "SQL012",
+    "SQL004",
+    "SQL009"
+  ],
+  "source": "SELECT o.o_orderkey, o.o_orderdate, o.o_totalprice\nFROM orders o\nWHERE o.o_orderdate BETWEEN DATE '1997-01-01' AND DATE '1997-03-31'\n  AND (SELECT count(*) FROM lineitem l WHERE l.l_orderkey = o.o_orderkey AND l.l_returnflag = 'R') > 0\n  AND o.o_comment LIKE '%unusual%'\nORDER BY o.o_totalprice DESC;",
+  "description": "WP4/WP5 complex query on the TPC-H-derived schema (set GREENCODE_TPCH_SCHEMA)."
+}

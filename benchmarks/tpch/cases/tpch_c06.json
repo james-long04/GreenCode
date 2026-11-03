@@ -1,0 +1,12 @@
+{
+  "id": "tpch_c06",
+  "title": "Top customers per region with an arithmetic predicate on an indexed column (SQL003) and a redundant DISTINCT",
+  "language": "sql",
+  "category": "tpch_complex",
+  "expected_rules": [
+    "SQL003",
+    "SQL007"
+  ],
+  "source": "SELECT DISTINCT r.r_name, c.c_custkey, c.c_name, sum(o.o_totalprice) AS total\nFROM region r\nJOIN nation n ON n.n_regionkey = r.r_regionkey\nJOIN customer c ON c.c_nationkey = n.n_nationkey\nJOIN orders o ON o.o_custkey = c.c_custkey\nWHERE o.o_orderkey * 1 > 0\n  AND o.o_orderdate + INTERVAL '0 day' >= DATE '1998-01-01'\nGROUP BY r.r_name, c.c_custkey, c.c_name\nHAVING sum(o.o_totalprice) > 500000\nORDER BY r.r_name, total DESC;",
+  "description": "WP4/WP5 complex query on the TPC-H-derived schema (set GREENCODE_TPCH_SCHEMA)."
+}

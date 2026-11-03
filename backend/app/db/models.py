@@ -230,3 +230,45 @@ class CarbonFactor(Base):
     notes: Mapped[str | None] = mapped_column(Text)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class LabRun(Base):
+    """One benchmarked query from the laboratory (TPC-H-derived) experiments.
+
+    Unlike ``benchmark_runs`` these are not tied to an optimisation: each row is a
+    (work package, query, condition, pass) measurement with its own samples, energy and
+    environment, so the measurement-overhead and power-management experiments can be
+    analysed without going through the AI pipeline.
+    """
+
+    __tablename__ = "lab_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    work_package: Mapped[str] = mapped_column(String(16), nullable=False, index=True)   # wp1 .. wp5
+    query_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)       # q01 .. q22, c01 ..
+    condition: Mapped[str] = mapped_column(String(120), nullable=False, index=True)     # e.g. "meter=lhm@0.1", "plan=balanced"
+    pass_no: Mapped[int] = mapped_column(Integer, default=1)
+    schema_name: Mapped[str] = mapped_column(String(64), default="tpch")
+    scale_factor: Mapped[float | None] = mapped_column(Float)
+    repetitions: Mapped[int] = mapped_column(Integer, nullable=False)
+    warmup_runs: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default="completed")
+    error: Mapped[str | None] = mapped_column(Text)
+    median_ms: Mapped[float | None] = mapped_column(Float)
+    mean_ms: Mapped[float | None] = mapped_column(Float)
+    stdev_ms: Mapped[float | None] = mapped_column(Float)
+    ci95_low_ms: Mapped[float | None] = mapped_column(Float)
+    ci95_high_ms: Mapped[float | None] = mapped_column(Float)
+    samples_ms: Mapped[list[float]] = mapped_column(JSON, default=list)
+    rows_returned: Mapped[int | None] = mapped_column(Integer)
+    cpu_time_ms: Mapped[float | None] = mapped_column(Float)
+    peak_rss_mb: Mapped[float | None] = mapped_column(Float)
+    energy_joules: Mapped[float | None] = mapped_column(Float)       # gross window energy (measured) or None
+    energy_joules_net: Mapped[float | None] = mapped_column(Float)   # idle floor subtracted
+    energy_method: Mapped[str] = mapped_column(String(16), default="estimated")
+    energy_source: Mapped[str] = mapped_column(String(32), default="")
+    energy_details: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    energy_estimate_joules: Mapped[float | None] = mapped_column(Float)
+    plan_metrics: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    environment: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)

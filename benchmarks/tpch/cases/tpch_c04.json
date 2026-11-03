@@ -1,0 +1,12 @@
+{
+  "id": "tpch_c04",
+  "title": "Parts whose average lineitem price exceeds the part's retail price; correlated subquery in SELECT and WHERE (SQL006), IN (subquery) over a large table (SQL010)",
+  "language": "sql",
+  "category": "tpch_complex",
+  "expected_rules": [
+    "SQL006",
+    "SQL010"
+  ],
+  "source": "SELECT p.p_partkey, p.p_name, p.p_retailprice,\n       (SELECT avg(l.l_extendedprice / l.l_quantity) FROM lineitem l WHERE l.l_partkey = p.p_partkey) AS avg_unit_price\nFROM part p\nWHERE p.p_partkey IN (SELECT l_partkey FROM lineitem WHERE l_shipmode = 'AIR')\n  AND p.p_brand = 'Brand#13'\n  AND (SELECT avg(l.l_extendedprice / l.l_quantity) FROM lineitem l WHERE l.l_partkey = p.p_partkey) > p.p_retailprice * 1.05\nORDER BY avg_unit_price DESC\nLIMIT 100;",
+  "description": "WP4/WP5 complex query on the TPC-H-derived schema (set GREENCODE_TPCH_SCHEMA)."
+}
