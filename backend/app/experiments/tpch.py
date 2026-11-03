@@ -133,11 +133,26 @@ def conditions_for(wp: str, settings: Settings, plan_label: str | None = None) -
     return [Condition(f"{tag}{plan}", meter, poll)]
 
 
-def _existing(db: Session, wp: str, qid: str, cond: str, pass_no: int) -> bool:
+def _existing(db: Session, wp: str, qid: str, cond: str, pass_no: int, schema: str, sf: float | None) -> bool:
     stmt = select(LabRun.id).where(LabRun.work_package == wp, LabRun.query_id == qid,
                                    LabRun.condition == cond, LabRun.pass_no == pass_no,
-                                   LabRun.status == "completed")
+                                   LabRun.schema_name == schema, LabRun.status == "completed")
+    if sf is not None:
+        stmt = stmt.where(LabRun.scale_factor == sf)
     return db.execute(stmt).first() is not None
+
+
+def clear_work_package(db: Session, wp: str, schema: str | None = None, sf: float | None = None) -> int:
+    """Delete lab runs for a work package (optionally only for one schema / scale factor). Returns rows deleted."""
+    from sqlalchemy import delete
+    stmt = delete(LabRun).where(LabRun.work_package == wp)
+    if schema:
+        stmt = stmt.where(LabRun.schema_name == schema)
+    if sf is not None:
+        stmt = stmt.where(LabRun.scale_factor == sf)
+    n = db.execute(stmt).rowcount
+    db.commit()
+    return n
 
 
 ProgressFn = Callable[[dict[str, Any]], None]
@@ -197,7 +212,7 @@ def run_work_package(db: Session, wp: str, *, settings: Settings | None = None, 
             ctx = EnergyContext(base, method=cond.meter, poll_seconds=cond.poll_seconds)
             for q in order:
                 n += 1
-                if _existing(db, wp, q.id, cond.label, pass_no):
+                if _existing(db, wp, q.id, cond.label, pass_no, base.benchmark_schema, sf):
                     log.info("skip %s %s %s pass %d (already done)", wp, q.id, cond.label, pass_no)
                     continue
                 t0 = time.perf_counter()

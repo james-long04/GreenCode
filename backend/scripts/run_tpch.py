@@ -51,6 +51,7 @@ def main() -> int:
                     help="minimum seconds the timed loop must span (repetitions are raised for short queries); 0 disables")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--project", default="TPC-H WP5", help="project name for wp5 pipeline runs")
+    ap.add_argument("--clear", action="store_true", help="delete this work package's existing rows (for the current schema/scale factor) before running")
     ap.add_argument("--force", action="store_true", help="run even if required pre-flight checks fail")
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
@@ -121,6 +122,9 @@ def main() -> int:
         print(head + (f", net {e:.1f} J" if e is not None else ""))
 
     with session_scope() as db:
+        if args.clear:
+            n = tpch.clear_work_package(db, wp, settings.tpch_schema, sf)
+            print(f"cleared {n} existing {wp} rows for schema {settings.tpch_schema}, sf~{sf}")
         runs = tpch.run_work_package(db, wp, settings=settings, queries=queries, conditions=conds, passes=args.passes,
                                      repetitions=args.repetitions, warmup=args.warmup, seed=args.seed,
                                      cooldown_seconds=args.cooldown, plan_label=args.plan_label,
