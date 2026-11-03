@@ -142,11 +142,40 @@ def _existing(db: Session, wp: str, qid: str, cond: str, pass_no: int) -> bool:
 
 ProgressFn = Callable[[dict[str, Any]], None]
 
+MAX_REPETITIONS = 2000
+
+
+def _probe_ms(settings: Settings, sql: str) -> float | None:
+    """One timed execution (after one untimed warm-up) to size the energy window."""
+    try:
+        with bench_connection(settings) as conn, conn.cursor() as cur:
+            cur.execute(sql); cur.fetchall()
+            t0 = time.perf_counter()
+            cur.execute(sql); cur.fetchall()
+            ms = (time.perf_counter() - t0) * 1000
+            conn.rollback()
+            return ms
+    except psycopg.Error:
+        return None
+
+
+def repetitions_for_window(base_reps: int, probe_ms: float | None, min_window_seconds: float) -> int:
+    """At least ``base_reps``, and enough that the timed loop spans ``min_window_seconds``.
+
+    LibreHardwareMonitor refreshes about once a second, so a window shorter than a few
+    refreshes cannot be measured; short queries are simply repeated more often.
+    """
+    if not probe_ms or probe_ms <= 0 or min_window_seconds <= 0:
+        return base_reps
+    needed = int(min_window_seconds * 1000 / probe_ms) + 1
+    return max(base_reps, min(needed, MAX_REPETITIONS))
+
 
 def run_work_package(db: Session, wp: str, *, settings: Settings | None = None, queries: Iterable[Query] | None = None,
                      conditions: Iterable[Condition] | None = None, passes: int = 1, repetitions: int | None = None,
                      warmup: int | None = None, shuffle: bool = True, seed: int = 42, cooldown_seconds: float = 5.0,
-                     plan_label: str | None = None, progress: ProgressFn | None = None) -> list[LabRun]:
+                     plan_label: str | None = None, min_window_seconds: float = 10.0,
+                     progress: ProgressFn | None = None) -> list[LabRun]:
     """Benchmark every (query, condition, pass) for a work package and persist LabRun rows."""
     if wp not in WORK_PACKAGES:
         raise ValueError(f"unknown work package {wp}")
@@ -172,11 +201,14 @@ def run_work_package(db: Session, wp: str, *, settings: Settings | None = None, 
                     log.info("skip %s %s %s pass %d (already done)", wp, q.id, cond.label, pass_no)
                     continue
                 t0 = time.perf_counter()
-                outcome = benchmark_sql(q.sql, base, ctx, repetitions=reps, warmup=warm)
+                probe = _probe_ms(base, q.sql)
+                reps_q = repetitions_for_window(reps, probe, min_window_seconds)
+                outcome = benchmark_sql(q.sql, base, ctx, repetitions=reps_q, warmup=warm)
                 run = LabRun(work_package=wp, query_id=q.id, condition=cond.label, pass_no=pass_no,
-                             schema_name=base.benchmark_schema, scale_factor=sf, repetitions=reps, warmup_runs=warm,
+                             schema_name=base.benchmark_schema, scale_factor=sf, repetitions=reps_q, warmup_runs=warm,
                              environment={**outcome.environment, "query_title": q.title, "meter": cond.meter,
-                                          "poll_seconds": cond.poll_seconds, "idle_watts": ctx.idle_watts})
+                                          "poll_seconds": cond.poll_seconds, "idle_watts": ctx.idle_watts,
+                                          "probe_ms": probe, "min_window_seconds": min_window_seconds})
                 if outcome.ok and outcome.summary:
                     s = outcome.summary
                     run.status = "completed"
@@ -202,12 +234,15 @@ def run_work_package(db: Session, wp: str, *, settings: Settings | None = None, 
                 db.add(run)
                 db.commit()
                 done.append(run)
-                log.info("%s %s %s pass %d: %s median=%.1f ms energy=%s J (%.0fs)", wp, q.id, cond.label, pass_no,
-                         run.status, run.median_ms or 0.0, f"{run.energy_joules_net:.1f}" if run.energy_joules_net else "-",
-                         time.perf_counter() - t0)
+                cov = (run.energy_details or {}).get("coverage")
+                log.info("%s %s %s pass %d: %s reps=%d median=%.1f ms window=%.1fs energy=%s J coverage=%s (%.0fs)",
+                         wp, q.id, cond.label, pass_no, run.status, reps_q, run.median_ms or 0.0,
+                         (outcome.wall_seconds or 0.0), f"{run.energy_joules_net:.1f}" if run.energy_joules_net else "-",
+                         f"{cov:.2f}" if cov is not None else "-", time.perf_counter() - t0)
                 if progress:
                     progress({"done": n, "total": total, "wp": wp, "query": q.id, "condition": cond.label,
                               "pass": pass_no, "status": run.status, "median_ms": run.median_ms,
+                              "repetitions": reps_q, "window_s": outcome.wall_seconds,
                               "energy_joules_net": run.energy_joules_net})
                 if cooldown_seconds:
                     time.sleep(cooldown_seconds)

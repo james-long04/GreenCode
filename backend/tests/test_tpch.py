@@ -59,6 +59,14 @@ def test_wp2_conditions_include_no_meter_and_two_poll_rates():
     assert any(c.meter == "lhm" and c.poll_seconds == 0.5 for c in conds)
 
 
+def test_repetitions_scale_short_queries_to_the_window():
+    assert tpch.repetitions_for_window(15, 16.0, 10.0) == 626      # 16 ms query -> ~10 s of work
+    assert tpch.repetitions_for_window(15, 2000.0, 10.0) == 15     # 2 s query already spans the window
+    assert tpch.repetitions_for_window(15, None, 10.0) == 15
+    assert tpch.repetitions_for_window(15, 0.01, 10.0) == tpch.MAX_REPETITIONS
+    assert tpch.repetitions_for_window(15, 16.0, 0) == 15
+
+
 def test_lhm_value_parsing_and_sensor_lookup():
     assert _parse_value("7,5 W") == 7.5
     assert _parse_value("48 °C") == 48.0

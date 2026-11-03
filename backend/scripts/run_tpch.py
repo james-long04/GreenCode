@@ -47,6 +47,8 @@ def main() -> int:
     ap.add_argument("--meter", choices=["none", "lhm", "codecarbon", "estimate"], help="override the meter (wp1/3/4)")
     ap.add_argument("--poll", type=float, help="LHM poll interval in seconds (with --meter lhm)")
     ap.add_argument("--cooldown", type=float, default=5.0, help="seconds to pause between queries")
+    ap.add_argument("--min-window", type=float, default=10.0,
+                    help="minimum seconds the timed loop must span (repetitions are raised for short queries); 0 disables")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--project", default="TPC-H WP5", help="project name for wp5 pipeline runs")
     ap.add_argument("--force", action="store_true", help="run even if required pre-flight checks fail")
@@ -114,15 +116,15 @@ def main() -> int:
 
     def progress(ev: dict) -> None:
         e = ev.get("energy_joules_net")
-        print(f"  [{ev['done']}/{ev['total']}] {ev['query']} {ev['condition']} pass {ev['pass']}: {ev['status']} "
-              f"median {ev['median_ms'] or 0:.1f} ms, net {e:.1f} J" if e is not None else
-              f"  [{ev['done']}/{ev['total']}] {ev['query']} {ev['condition']} pass {ev['pass']}: {ev['status']} "
-              f"median {ev['median_ms'] or 0:.1f} ms")
+        head = (f"  [{ev['done']}/{ev['total']}] {ev['query']} {ev['condition']} pass {ev['pass']}: {ev['status']} "
+                f"{ev.get('repetitions')} reps, median {ev['median_ms'] or 0:.1f} ms, window {ev.get('window_s') or 0:.1f} s")
+        print(head + (f", net {e:.1f} J" if e is not None else ""))
 
     with session_scope() as db:
         runs = tpch.run_work_package(db, wp, settings=settings, queries=queries, conditions=conds, passes=args.passes,
                                      repetitions=args.repetitions, warmup=args.warmup, seed=args.seed,
-                                     cooldown_seconds=args.cooldown, plan_label=args.plan_label, progress=progress)
+                                     cooldown_seconds=args.cooldown, plan_label=args.plan_label,
+                                     min_window_seconds=args.min_window, progress=progress)
         failed = [r for r in runs if r.status != "completed"]
     print(f"\n{wp} done: {len(runs)} runs ({len(failed)} failed) in {(time.perf_counter() - t0) / 60:.1f} min")
     for r in failed:
