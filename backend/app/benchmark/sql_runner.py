@@ -42,14 +42,19 @@ def _plan_metrics(plan: dict[str, Any]) -> dict[str, float]:
         "pg_execution_ms": float(plan.get("Execution Time", 0.0)),
     }
     hit = read = 0.0
-    seq_scans = 0
+    seq_scans = gathers = workers = 0
+    io_read_ms = 0.0
 
     def walk(p: dict[str, Any]) -> None:
-        nonlocal hit, read, seq_scans
+        nonlocal hit, read, seq_scans, gathers, workers, io_read_ms
         hit += float(p.get("Shared Hit Blocks", 0) or 0)
         read += float(p.get("Shared Read Blocks", 0) or 0)
+        io_read_ms += float(p.get("I/O Read Time", 0) or 0)  # needs track_io_timing = on
         if p.get("Node Type") == "Seq Scan":
             seq_scans += 1
+        if p.get("Node Type") in ("Gather", "Gather Merge"):
+            gathers += 1
+            workers = max(workers, int(p.get("Workers Launched", 0) or 0))
         for c in p.get("Plans", []) or []:
             walk(c)
 
@@ -57,6 +62,9 @@ def _plan_metrics(plan: dict[str, Any]) -> dict[str, float]:
     metrics["pg_shared_hit_blocks"] = hit
     metrics["pg_shared_read_blocks"] = read
     metrics["pg_seq_scans"] = float(seq_scans)
+    metrics["pg_gather_nodes"] = float(gathers)          # 0 => the plan ran on a single backend process
+    metrics["pg_parallel_workers"] = float(workers)      # max workers launched under any Gather
+    metrics["pg_io_read_ms"] = io_read_ms
     return metrics
 
 
