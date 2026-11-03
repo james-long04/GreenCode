@@ -25,6 +25,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--project", help="project name (default: everything)")
     ap.add_argument("--out", default="results")
+    ap.add_argument("--sources", action="store_true",
+                    help="also write candidates.md: original, prompt, raw response and candidate per optimisation")
     args = ap.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -60,6 +62,19 @@ def main() -> int:
                             w.writerow([opt.id, r["case_id"], r["condition"], run.variant, i, ms])
                         for m in db.execute(select(Measurement).where(Measurement.benchmark_run_id == run.id)).scalars():
                             mw.writerow([opt.id, r["case_id"], r["condition"], run.variant, m.metric, m.value, m.unit, m.method, m.source])
+        if args.sources:
+            parts = []
+            for r in sorted(rows, key=lambda r: (r["case_id"] or "", r["condition"])):
+                opt = db.get(Optimisation, r["optimisation_id"])
+                parts += [f"## {r['case_id']} — {r['condition']} — {opt.status}" + (f" ({opt.failure_reason})" if opt.failure_reason else ""), "",
+                          f"speed-up: {r.get('speedup')}  energy ratio: {r.get('energy_ratio')}", "",
+                          "### Original", "```sql" if r["language"] == "sql" else "```python", (opt.original_source or "").strip(), "```", "",
+                          "### Candidate", "```sql" if r["language"] == "sql" else "```python", (opt.candidate_source or "(none)").strip(), "```", "",
+                          "### Test results", ""]
+                for t in opt.test_results:
+                    parts.append(f"- {t.test_name}: {'pass' if t.passed else 'FAIL'}" + (f" — {t.failure_type}: {(t.details or '')[:300]}" if not t.passed else ""))
+                parts += ["", "<details><summary>Prompt</summary>", "", "```", (opt.prompt or "").strip(), "```", "", "</details>", ""]
+            (out / "candidates.md").write_text("\n".join(parts), encoding="utf-8")
     print(f"exported {len(rows)} optimisations to {out}/")
     return 0
 
