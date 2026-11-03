@@ -42,10 +42,15 @@ def geomean(xs):  # type: ignore[no-untyped-def]
     return math.exp(sum(map(math.log, xs)) / len(xs)) if xs else None
 
 
+def _fmt(x: float) -> str:
+    a = abs(x)
+    return f"{x:,.0f}" if a >= 100 else (f"{x:.1f}" if a >= 10 else f"{x:.2f}")
+
+
 def md_table(headers, rows):  # type: ignore[no-untyped-def]
     out = ["| " + " | ".join(headers) + " |", "|" + "|".join("---" for _ in headers) + "|"]
     for r in rows:
-        out.append("| " + " | ".join("" if c is None else (f"{c:.3g}" if isinstance(c, float) else str(c)) for c in r) + " |")
+        out.append("| " + " | ".join("" if c is None else (_fmt(c) if isinstance(c, float) else str(c)) for c in r) + " |")
     return "\n".join(out)
 
 
