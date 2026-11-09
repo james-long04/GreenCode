@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="640" viewBox="0 0 1240 640" font-family="Segoe UI, Arial, sans-serif">
+<rect width="1240" height="640" fill="white"/>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#444"/></marker></defs>
+<text x="40" y="44" font-size="26" font-weight="700" fill="#1a1a1a">GreenCode — physical architecture (single Windows 11 laptop)</text>
+<text x="40" y="70" font-size="15" fill="#555">Dell laptop · Intel Core Ultra 5 135U (2P + 8E + 2LP-E cores) · 32 GB RAM · 475 GB NVMe · mains power, Windows power mode recorded per run</text>
+<rect x="40" y="90" width="1160" height="510" rx="18" fill="#FAFAF8" stroke="#999" stroke-width="2" stroke-dasharray="6 4"/>
+<rect x="70" y="120" width="230" height="110" rx="10" fill="#DCEBFA" stroke="#2F6DB5" stroke-width="2"/>
+<text x="185.0" y="146" text-anchor="middle" font-size="17" font-weight="600" fill="#1a1a1a">Browser</text>
+<text x="185.0" y="170" text-anchor="middle" font-size="13" fill="#333">Chrome / Edge</text>
+<text x="185.0" y="188" text-anchor="middle" font-size="13" fill="#333">React dashboard (SPA)</text>
+<text x="185.0" y="206" text-anchor="middle" font-size="13" fill="#333">http://localhost:5173</text>
+<rect x="360" y="120" width="230" height="110" rx="10" fill="#DCEBFA" stroke="#2F6DB5" stroke-width="2"/>
+<text x="475.0" y="146" text-anchor="middle" font-size="17" font-weight="600" fill="#1a1a1a">Vite dev server</text>
+<text x="475.0" y="170" text-anchor="middle" font-size="13" fill="#333">Node 20 · TypeScript</text>
+<text x="475.0" y="188" text-anchor="middle" font-size="13" fill="#333">serves frontend/, proxies /api</text>
+<text x="475.0" y="206" text-anchor="middle" font-size="13" fill="#333">port 5173</text>
+<rect x="650" y="120" width="260" height="110" rx="10" fill="#DDF2E3" stroke="#2E8B57" stroke-width="2"/>
+<text x="780.0" y="146" text-anchor="middle" font-size="17" font-weight="600" fill="#1a1a1a">FastAPI backend</text>
+<text x="780.0" y="170" text-anchor="middle" font-size="13" fill="#333">Python 3.15 · uvicorn</text>
+<text x="780.0" y="188" text-anchor="middle" font-size="13" fill="#333">analysis · ai · verification ·</text>
+<text x="780.0" y="206" text-anchor="middle" font-size="13" fill="#333">benchmark · experiments · api</text>
+<text x="780.0" y="224" text-anchor="middle" font-size="13" fill="#333">port 8000</text>
+<line x1="300" y1="175" x2="360" y2="175" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+<line x1="590" y1="175" x2="650" y2="175" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="620.0" y="167.0" text-anchor="middle" font-size="12" fill="#444">/api/*</text>
+<rect x="70" y="300" width="230" height="120" rx="10" fill="#FFE3C7" stroke="#C65A00" stroke-width="2"/>
+<text x="185.0" y="326" text-anchor="middle" font-size="17" font-weight="600" fill="#1a1a1a">Sandbox worker</text>
+<text x="185.0" y="350" text-anchor="middle" font-size="13" fill="#333">python -I -B worker.py</text>
+<text x="185.0" y="368" text-anchor="middle" font-size="13" fill="#333">empty env · timeout · hardened</text>
+<text x="185.0" y="386" text-anchor="middle" font-size="13" fill="#333">verify + benchmark Python</text>
+<rect x="360" y="300" width="230" height="120" rx="10" fill="#E8DDF7" stroke="#6A3FB5" stroke-width="2"/>
+<text x="475.0" y="326" text-anchor="middle" font-size="17" font-weight="600" fill="#1a1a1a">Ollama</text>
+<text x="475.0" y="350" text-anchor="middle" font-size="13" fill="#333">qwen2.5-coder:7b</text>
+<text x="475.0" y="368" text-anchor="middle" font-size="13" fill="#333">temperature 0 · seed 42</text>
+<text x="475.0" y="386" text-anchor="middle" font-size="13" fill="#333">http://localhost:11434</text>
+<rect x="650" y="300" width="260" height="120" rx="10" fill="#DDF2E3" stroke="#2E8B57" stroke-width="2"/>
+<text x="780.0" y="326" text-anchor="middle" font-size="17" font-weight="600" fill="#1a1a1a">PostgreSQL 18</text>
+<text x="780.0" y="350" text-anchor="middle" font-size="13" fill="#333">public: evidence store (9 tables)</text>
+<text x="780.0" y="368" text-anchor="middle" font-size="13" fill="#333">bench: controlled dataset 850k rows</text>
+<text x="780.0" y="386" text-anchor="middle" font-size="13" fill="#333">tpch: TPC-H-derived SF1 6M rows</text>
+<text x="780.0" y="404" text-anchor="middle" font-size="13" fill="#333">port 5432</text>
+<rect x="970" y="300" width="200" height="120" rx="10" fill="#FFF4C2" stroke="#B8860B" stroke-width="2"/>
+<text x="1070.0" y="326" text-anchor="middle" font-size="17" font-weight="600" fill="#1a1a1a">LibreHardwareMonitor</text>
+<text x="1070.0" y="350" text-anchor="middle" font-size="13" fill="#333">signed kernel driver → RAPL</text>
+<text x="1070.0" y="368" text-anchor="middle" font-size="13" fill="#333">CPU package / platform W</text>
+<text x="1070.0" y="386" text-anchor="middle" font-size="13" fill="#333">http://localhost:8085</text>
+<line x1="700" y1="230" x2="250" y2="300" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="475.0" y="239.0" text-anchor="middle" font-size="12" fill="#444">subprocess per job</text>
+<line x1="740" y1="230" x2="520" y2="300" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="630.0" y="289.0" text-anchor="middle" font-size="12" fill="#444">POST /api/generate</text>
+<line x1="790" y1="230" x2="790" y2="300" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="790.0" y="261.0" text-anchor="middle" font-size="12" fill="#444">SQLAlchemy + psycopg</text>
+<line x1="880" y1="230" x2="1040" y2="300" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="960.0" y="243.0" text-anchor="middle" font-size="12" fill="#444">poll data.json @ 0.1 s</text>
+<rect x="70" y="490" width="1100" height="90" rx="10" fill="#F3F4F2" stroke="#888" stroke-width="2"/>
+<text x="620.0" y="516" text-anchor="middle" font-size="17" font-weight="600" fill="#1a1a1a">Hardware</text>
+<text x="620.0" y="540" text-anchor="middle" font-size="13" fill="#333">CPU with RAPL energy counters (package, cores, memory, platform) · psutil reads CPU time and working set per process</text>
+<text x="620.0" y="558" text-anchor="middle" font-size="13" fill="#333">Windows power mode (Best efficiency / Balanced / Best performance) decides P-core vs E-core placement and frequency</text>
+<line x1="1070" y1="420" x2="1070" y2="490" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="1070.0" y="451.0" text-anchor="middle" font-size="12" fill="#444">MSR reads</text>
+<line x1="185" y1="420" x2="185" y2="490" stroke="#444" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="185.0" y="451.0" text-anchor="middle" font-size="12" fill="#444">psutil</text>
+<text x="40" y="628" font-size="13" fill="#555">Outside the laptop only: GitHub (source + docs), Zotero (references). No cloud, no containers — measurements need direct access to the hardware counters.</text>
+</svg>
